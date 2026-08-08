@@ -192,3 +192,24 @@ body {
 .period-8 { grid-row: 8; }
 .period-9 { grid-row: 9; }
 .period-10 { grid-row: 10; }
+
+/* Explore Mode Styles */
+.explore-mode .element {
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.explore-mode .element:hover {
+    transform: scale(1.6);
+    z-index: 50;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.4);
+    filter: saturate(1.2) brightness(1.2);
+}
+
+/* Bohr Model SVG Animations */
+@keyframes orbit-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.electron-orbit {
+    transform-origin: 100px 100px;
+}

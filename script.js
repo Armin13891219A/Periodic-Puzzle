@@ -1,3 +1,106 @@
+
+const categoryInfo = {
+    'alkali': { name: 'فلز قلیایی', desc: 'فلزات قلیایی بسیار واکنش‌پذیر هستند و در لایه ظرفیت خود تنها یک الکترون دارند. آن‌ها در آب واکنش شدیدی نشان می‌دهند.', color: '#ff2a6d' },
+    'alkaline-earth': { name: 'فلز قلیایی خاکی', desc: 'این فلزات در لایه آخر خود دو الکترون دارند و نسبت به گروه اول واکنش‌پذیری کمتری دارند اما همچنان فعالند.', color: '#ffc857' },
+    'transition': { name: 'فلز واسطه', desc: 'فلزات واسطه دارای خواص فلزی قوی، نقطه ذوب بالا و قابلیت تشکیل ترکیبات رنگی و کاتالیزورهای عالی هستند.', color: '#05d9e8' },
+    'post-transition': { name: 'فلز پس‌واسطه', desc: 'این فلزات نرم‌تر از فلزات واسطه بوده و نقطه ذوب پایین‌تری دارند (مانند آلومینیم و سرب).', color: '#005678' },
+    'metalloid': { name: 'شبه‌فلز', desc: 'شبه‌فلزات خواصی بین فلزات و نافلزات دارند و به دلیل رسانایی نسبی، در ساخت قطعات الکترونیکی (مثل سیلیکون) کاربرد فراوان دارند.', color: '#d1f7ff' },
+    'nonmetal': { name: 'نافلز', desc: 'نافلزات رسانای ضعیف گرما و الکتریسیته بوده و در دماها و حالت‌های گوناگون (جامد، مایع، گاز) یافت می‌شوند.', color: '#a855f7' },
+    'halogen': { name: 'هالوژن', desc: 'هالوژن‌ها نافلزات بسیار واکنش‌پذیری هستند که برای رسیدن به آرایش پایدار هشت‌تایی تنها به یک الکترون نیاز دارند.', color: '#d90368' },
+    'noble': { name: 'گاز نجیب', desc: 'گازهای نجیب دارای آرایش الکترونی کامل و پایدار بوده و تمایل بسیار کمی به انجام واکنش‌های شیمیایی دارند.', color: '#00ff9f' },
+    'lanthanide': { name: 'لانتانید', desc: 'لانتانیدها عناصر واسطه داخلی (خاکی کمیاب) هستند که خواص شیمیایی بسیار مشابهی به یکدیگر دارند.', color: '#bd00ff' },
+    'actinide': { name: 'اکتینید', desc: 'اکتینیدها فلزات پرتوزا و سنگین هستند که بسیاری از آن‌ها در طبیعت یافت نمی‌شوند و در راکتورها ساخته شده‌اند.', color: '#ff8e00' }
+};
+
+// Calculate electron shells using simplified Aufbau principle for visual Bohr model
+function getElectronShells(atomicNumber) {
+    const orbitals = [
+        [1, 2], [2, 2], [2, 6], [3, 2], [3, 6], [4, 2], [3, 10], [4, 6],
+        [5, 2], [4, 10], [5, 6], [6, 2], [4, 14], [5, 10], [6, 6],
+        [7, 2], [5, 14], [6, 10], [7, 6]
+    ];
+    let shells = [0,0,0,0,0,0,0];
+    let e = atomicNumber;
+    for (let [n, cap] of orbitals) {
+        if (e <= 0) break;
+        let fill = Math.min(e, cap);
+        shells[n-1] += fill;
+        e -= fill;
+    }
+    return shells.filter(s => s > 0);
+}
+
+function drawBohrModel(atomicNumber, containerId) {
+    const container = document.getElementById(containerId);
+    const shells = getElectronShells(atomicNumber);
+    const maxRadius = 90;
+    const center = 100;
+    const shellGap = maxRadius / Math.max(shells.length, 1);
+    
+    let svg = `<svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-lg">`;
+    // Nucleus
+    svg += `<circle cx="${center}" cy="${center}" r="12" fill="url(#nucleusGrad)"/>`;
+    svg += `<defs>
+                <radialGradient id="nucleusGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#ef4444" />
+                    <stop offset="100%" stop-color="#991b1b" />
+                </radialGradient>
+            </defs>`;
+            
+    // Shells & Electrons
+    shells.forEach((electrons, shellIndex) => {
+        const radius = (shellIndex + 1) * shellGap;
+        const speed = 15 + (shellIndex * 5); // outer shells rotate slower
+        const direction = shellIndex % 2 === 0 ? 'normal' : 'reverse';
+        
+        svg += `<g class="electron-orbit" style="animation: orbit-spin ${speed}s linear infinite ${direction};">`;
+        svg += `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="4 2"/>`;
+        
+        const angleStep = (Math.PI * 2) / electrons;
+        for (let i = 0; i < electrons; i++) {
+            const x = center + radius * Math.cos(i * angleStep);
+            const y = center + radius * Math.sin(i * angleStep);
+            svg += `<circle cx="${x}" cy="${y}" r="3" fill="#0ea5e9" filter="drop-shadow(0 0 3px #0ea5e9)"/>`;
+        }
+        svg += `</g>`;
+    });
+    
+    svg += `</svg>`;
+    container.innerHTML = svg;
+}
+
+// Leaderboard functionality
+function getLeaderboard() {
+    return JSON.parse(localStorage.getItem('periodicLeaderboard')) || [];
+}
+function saveScore(name, score) {
+    const lb = getLeaderboard();
+    lb.push({ name, score, date: new Date().toLocaleDateString('fa-IR') });
+    lb.sort((a, b) => b.score - a.score);
+    localStorage.setItem('periodicLeaderboard', JSON.stringify(lb.slice(0, 10)));
+}
+function renderLeaderboard() {
+    const lb = getLeaderboard();
+    const list = document.getElementById('leaderboard-list');
+    if (lb.length === 0) {
+        list.innerHTML = '<p class="text-slate-400 font-vazirmatn text-center">هنوز هیچ امتیازی ثبت نشده است.</p>';
+        return;
+    }
+    list.innerHTML = lb.map((entry, index) => `
+        <div class="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg border border-slate-600">
+            <div class="flex items-center gap-3">
+                <span class="text-xl font-bold ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-slate-300' : index === 2 ? 'text-amber-600' : 'text-slate-500'}">#${index+1}</span>
+                <span class="font-vazirmatn text-white font-bold">${entry.name}</span>
+            </div>
+            <div class="text-right">
+                <span class="text-cyan-400 font-bold block">${entry.score} pts</span>
+                <span class="text-xs text-slate-400 font-vazirmatn">${entry.date}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+
 // Complete periodic table data structure up to period 5
 // Categories mapping:
 // 1: alkali, 2: alkaline-earth, 3: transition, 4: post-transition
@@ -137,6 +240,44 @@ let isGameActive = false;
 
 // DOM Elements
 const tableEl = document.getElementById('periodic-table');
+
+document.getElementById('leaderboard-btn').addEventListener('click', () => {
+    renderLeaderboard();
+    document.getElementById('leaderboard-modal').classList.remove('hidden');
+});
+document.getElementById('close-leaderboard-btn').addEventListener('click', () => {
+    document.getElementById('leaderboard-modal').classList.add('hidden');
+});
+document.getElementById('close-element-btn').addEventListener('click', () => {
+    document.getElementById('element-modal').classList.add('hidden');
+});
+
+function openElementInfo(elData) {
+    if (isGameActive) return; // Disable in game
+    const info = categoryInfo[elData.cat] || {name: elData.cat, desc: '', color: '#fff'};
+    
+    document.getElementById('info-name').textContent = elData.name;
+    document.getElementById('info-sym').textContent = elData.sym;
+    document.getElementById('info-sym').style.color = info.color;
+    
+    const catEl = document.getElementById('info-cat');
+    catEl.textContent = info.name;
+    catEl.style.backgroundColor = info.color + '40'; // transparent bg
+    catEl.style.color = info.color;
+    
+    const eShells = getElectronShells(elData.num);
+    document.getElementById('info-desc').innerHTML = `
+        <div class="mb-3">
+            <span class="text-slate-400">عدد اتمی:</span> <span class="font-english font-bold text-white text-lg">${elData.num}</span><br>
+            <span class="text-slate-400">الکترون‌ها در لایه‌ها:</span> <span class="font-english text-cyan-300" dir="ltr">[${eShells.join(', ')}]</span>
+        </div>
+        ${info.desc}
+    `;
+    
+    drawBohrModel(elData.num, 'bohr-model');
+    document.getElementById('element-modal').classList.remove('hidden');
+}
+
 const targetBox = document.getElementById('target-element-box');
 const targetSymbolEl = document.getElementById('target-symbol');
 const targetNameEl = document.getElementById('target-name');
@@ -155,12 +296,28 @@ const restartBtn = document.getElementById('restart-btn');
 function createGrid(activeGame = false) {
     tableEl.innerHTML = '';
     
+    if (!activeGame) {
+        tableEl.classList.add('explore-mode');
+    } else {
+        tableEl.classList.remove('explore-mode');
+    }
+    
     elementData.forEach(el => {
         const cell = document.createElement('div');
         // Base classes
         cell.className = `element font-english period-${el.p} group-${el.g}`;
         
-        if (el.isMainBlock && activeGame) {
+        if (!activeGame) {
+            // Interactive Explore Mode
+            cell.classList.add(`cat-${el.cat}`);
+            cell.addEventListener('click', () => openElementInfo(el));
+            cell.innerHTML = `
+                <span class="number" style="direction: ltr; text-align: left;">${el.num}</span>
+                <span class="symbol" style="direction: ltr;">${el.sym}</span>
+                <span class="name font-vazirmatn" style="direction: ltr;">${el.name}</span>
+            `;
+        }
+        else if (el.isMainBlock && activeGame) {
             // These are the puzzle targets
             cell.classList.add('puzzle-target');
             cell.dataset.atomic = el.num;
@@ -308,6 +465,17 @@ function endGame(win) {
     }
     
     finalScoreEl.textContent = score;
+    
+    // Save to Leaderboard logic
+    setTimeout(() => {
+        if (score > 0) {
+            const playerName = prompt("بازی تمام شد! امتیاز شما: " + score + "\nلطفاً نام خود را برای ثبت در لیدربورد وارد کنید:");
+            if (playerName && playerName.trim() !== "") {
+                saveScore(playerName.trim(), score);
+                alert("امتیاز شما با موفقیت ثبت شد!");
+            }
+        }
+    }, 500); // slight delay so modal renders first
 }
 
 // Event Listeners

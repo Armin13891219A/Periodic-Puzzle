@@ -39,8 +39,11 @@
                         </label>
                     </div>
                 </div>
-                <button id="start-btn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg shadow-cyan-500/30">
+                                <button id="start-btn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg shadow-cyan-500/30 mb-3">
                     شروع آزمون
+                </button>
+                <button id="leaderboard-btn" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg">
+                    🏆 جدول امتیازات
                 </button>
             </div>
 
@@ -75,6 +78,43 @@
         <div class="container mx-auto px-2 overflow-x-auto pb-10">
             <div id="periodic-table" class="periodic-grid min-w-[900px] mx-auto pb-4" dir="ltr">
                 <!-- Table will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Element Info Modal -->
+    <div id="element-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-slate-600 rounded-3xl p-6 max-w-lg w-full text-center shadow-2xl relative transform transition-all scale-100">
+            <button id="close-element-btn" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-right">
+                    <h2 id="info-name" class="text-3xl font-extrabold text-white"></h2>
+                    <p id="info-cat" class="text-sm font-bold mt-1 px-3 py-1 rounded-full inline-block"></p>
+                </div>
+                <div class="text-left font-english text-5xl font-black" id="info-sym" style="color: var(--c-alkali)"></div>
+            </div>
+            
+            <div class="bg-slate-900 rounded-2xl p-4 mb-4 flex justify-center items-center">
+                <div id="bohr-model" class="w-64 h-64"></div>
+            </div>
+            
+            <div class="bg-slate-700/50 rounded-xl p-4 text-right text-slate-300 text-sm leading-relaxed" id="info-desc">
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-yellow-500 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl shadow-yellow-500/20 relative">
+            <button id="close-leaderboard-btn" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 class="text-3xl font-extrabold text-yellow-400 mb-6">🏆 نفرات برتر</h2>
+            <div id="leaderboard-list" class="flex flex-col gap-3 font-english text-left">
+                <!-- Scores injected here -->
             </div>
         </div>
     </div>
