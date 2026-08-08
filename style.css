@@ -1,4 +1,93 @@
 
+/* Responsive Table Wrapper */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 1.5rem;
+    margin: 0 auto;
+}
+
+/* Scrollbar styling */
+.table-wrapper::-webkit-scrollbar {
+    height: 10px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+    background: #1e293b;
+    border-radius: 5px;
+    margin: 0 10px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #0ea5e9;
+    border-radius: 5px;
+}
+
+/* The Grid itself */
+.periodic-grid {
+    display: grid;
+    /* Force 18 equal columns */
+    grid-template-columns: repeat(18, 1fr);
+    gap: 0.25rem;
+    padding: 0.5rem;
+    /* This is the magic! Never let the table shrink below 1050px. 
+       On mobile, the table-wrapper will just scroll it horizontally. */
+    min-width: 1050px; 
+    margin: 0 auto;
+}
+
+/* Ensure elements scale nicely within their fixed-width grid cells */
+.element {
+    aspect-ratio: 1; /* Keep them square */
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden; /* Prevent content from breaking the box */
+}
+
+.element .number {
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+.element .symbol {
+    font-size: 1.3rem;
+    line-height: 1;
+    margin: auto 0;
+    text-align: center;
+}
+
+.element .name {
+    font-size: 0.55rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Long names like پرازئودیمیم will get ... */
+}
+
+/* Modals scrolling on small screens */
+#element-modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+#element-modal-content::-webkit-scrollbar { width: 6px; }
+#element-modal-content::-webkit-scrollbar-track { background: transparent; }
+#element-modal-content::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+#bohr-model {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    aspect-ratio: 1/1;
+}
+@media (min-width: 640px) {
+    #bohr-model { max-width: 256px; }
+}
+
+
+
 /* Responsive Periodic Grid Base */
 .periodic-grid {
     display: grid;
