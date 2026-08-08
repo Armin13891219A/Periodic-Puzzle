@@ -435,10 +435,12 @@ document.getElementById('leaderboard-btn').addEventListener('click', () => {
     renderLeaderboard();
     document.getElementById('leaderboard-modal').classList.remove('hidden');
 });
-document.getElementById('close-leaderboard-btn').addEventListener('click', () => {
+
+// Close modals by clicking on the background (backdrop)
+document.getElementById('leaderboard-modal').addEventListener('click', () => {
     document.getElementById('leaderboard-modal').classList.add('hidden');
 });
-document.getElementById('close-element-btn').addEventListener('click', () => {
+document.getElementById('element-modal').addEventListener('click', () => {
     document.getElementById('element-modal').classList.add('hidden');
 });
 
