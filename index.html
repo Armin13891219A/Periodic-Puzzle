@@ -24,14 +24,7 @@
     </div>
 
 
-    <div id="landscape-warning" class="hidden md:hidden fixed inset-0 bg-slate-900 z-50 flex-col items-center justify-center p-6 text-center">
-        <svg class="w-16 h-16 text-slate-400 mb-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <rect x="5" y="2" width="14" height="20" rx="2" stroke-width="2"></rect>
-            <path d="M12 18h.01" stroke-width="2" stroke-linecap="round"></path>
-        </svg>
-        <h2 class="text-2xl font-bold text-white mb-4">لطفاً گوشی را بچرخانید</h2>
-        <p class="text-slate-400">برای مشاهده کامل جدول تناوبی پازل، لطفاً دستگاه خود را در حالت افقی (Landscape) قرار دهید.</p>
-    </div>
+    
 
     <div id="main-content" class="pb-12">
         <div class="pt-8 md:pt-12 pb-4 px-4 text-center container mx-auto">
@@ -89,7 +82,7 @@
         </div>
 
         <div class="container mx-auto px-2 overflow-x-auto pb-10">
-            <div id="periodic-table" class="periodic-grid min-w-[900px] mx-auto pb-4" dir="ltr">
+            <div id="periodic-table" class="periodic-grid w-full min-w-full md:min-w-[700px] lg:min-w-[900px] mx-auto pb-4" dir="ltr">
                 <!-- Table will be generated here -->
             </div>
         </div>
@@ -144,21 +137,6 @@
     </div>
 
     <script src="script.js"></script>
-    <script>
-        // Simple script to handle landscape warning on mobile
-        function checkOrientation() {
-            if (window.innerWidth < 768) {
-                if (window.innerHeight > window.innerWidth) {
-                    document.getElementById('landscape-warning').style.display = 'flex';
-                } else {
-                    document.getElementById('landscape-warning').style.display = 'none';
-                }
-            } else {
-                document.getElementById('landscape-warning').style.display = 'none';
-            }
-        }
-        window.addEventListener('resize', checkOrientation);
-        checkOrientation();
-    </script>
+    
 </body>
 </html>

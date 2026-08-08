@@ -1,3 +1,73 @@
+
+/* Responsive Periodic Grid Base */
+.periodic-grid {
+    display: grid;
+    /* On mobile, shrink elements down slightly to fit or scroll better */
+    grid-template-columns: repeat(18, minmax(20px, 1fr)); 
+    gap: 0.15rem;
+    position: relative;
+    padding: 0.5rem;
+    max-width: 1300px;
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .periodic-grid {
+        grid-template-columns: repeat(18, minmax(30px, 1fr));
+        gap: 0.2rem;
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .periodic-grid {
+        grid-template-columns: repeat(18, minmax(45px, 1fr));
+        gap: 0.25rem;
+    }
+}
+
+/* Adjust element sizes on small screens */
+.element {
+    padding: 0.1rem;
+}
+
+.element .number {
+    font-size: 0.4rem;
+}
+
+.element .symbol {
+    font-size: 0.8rem;
+}
+
+.element .name {
+    font-size: 0.35rem;
+    opacity: 0; /* Hide full names on very small screens to avoid clutter */
+}
+
+@media (min-width: 640px) {
+    .element .number { font-size: 0.5rem; }
+    .element .symbol { font-size: 1rem; }
+    .element .name { font-size: 0.4rem; opacity: 0.8; }
+}
+
+@media (min-width: 1024px) {
+    .element { padding: 0.25rem; }
+    .element .number { font-size: 0.65rem; }
+    .element .symbol { font-size: 1.25rem; }
+    .element .name { font-size: 0.5rem; opacity: 0.8; }
+}
+
+/* Fix main container overflow on mobile */
+.overflow-x-auto {
+    /* Allow scrolling only if it truly overflows, but avoid horizontal scrollbars if we can */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Hide Landscape Warning if we are now fully responsive */
+#landscape-warning {
+    display: none !important;
+}
+
 /* CSS based on the requested target site's design */
 
 :root {
@@ -19,15 +89,7 @@ body {
     font-family: 'Outfit', sans-serif;
 }
 
-.periodic-grid {
-    display: grid;
-    grid-template-columns: repeat(18, minmax(45px, 1fr));
-    grid-template-rows: repeat(7, 1fr) 20px repeat(2, 1fr);
-    gap: 0.25rem;
-    position: relative;
-    padding: 1rem;
-    max-width: 1300px;
-}
+
 
 /* Base element styles matching the prozhenegar theme */
 .element {
