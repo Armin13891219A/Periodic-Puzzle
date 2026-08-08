@@ -732,3 +732,12 @@ document.getElementById('player-name-input').addEventListener('keypress', (e) =>
         document.getElementById('submit-name-btn').click();
     }
 });
+
+// Re-add close button listener for mobile specifically
+const closeBtn = document.getElementById('close-element-btn');
+if(closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('element-modal').classList.add('hidden');
+    });
+}

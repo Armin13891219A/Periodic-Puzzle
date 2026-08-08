@@ -81,8 +81,9 @@
             </div>
         </div>
 
-        <div class="container mx-auto px-2 overflow-x-auto pb-10">
-            <div id="periodic-table" class="periodic-grid w-full min-w-full md:min-w-[700px] lg:min-w-[900px] mx-auto pb-4" dir="ltr">
+        <div class="container mx-auto px-2 pb-10">
+            <div class="table-wrapper">
+                <div id="periodic-table" class="periodic-grid" dir="ltr">
                 <!-- Table will be generated here -->
             </div>
         </div>
@@ -92,7 +93,10 @@
     <!-- Element Info Modal -->
     <div id="element-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div id="element-modal-content" class="bg-slate-800 border-2 border-slate-600 rounded-3xl p-6 max-w-lg w-full text-center shadow-2xl relative transform transition-all scale-100" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-4">
+            <button id="close-element-btn" class="md:hidden absolute top-3 right-3 text-slate-400 hover:text-white bg-slate-700/50 p-2 rounded-full z-10">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="flex justify-between items-center mb-4 mt-4 md:mt-0">
                 <div class="text-right">
                     <h2 id="info-name" class="text-3xl font-extrabold text-white"></h2>
                     <p id="info-cat" class="text-sm font-bold mt-1 px-3 py-1 rounded-full inline-block"></p>

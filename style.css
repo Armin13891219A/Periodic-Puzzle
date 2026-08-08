@@ -2,6 +2,116 @@
 /* Responsive Periodic Grid Base */
 .periodic-grid {
     display: grid;
+    /* Base size that looks good and readable, never shrink below this */
+    grid-template-columns: repeat(18, minmax(40px, 1fr));
+    gap: 0.2rem;
+    position: relative;
+    padding: 0.5rem;
+    width: max-content; /* Force width based on content */
+    margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+    .periodic-grid {
+        grid-template-columns: repeat(18, minmax(50px, 1fr));
+        gap: 0.3rem;
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .periodic-grid {
+        grid-template-columns: repeat(18, minmax(60px, 1fr));
+        gap: 0.4rem;
+    }
+}
+
+/* Base element sizes */
+.element {
+    padding: 0.2rem;
+}
+
+.element .number {
+    font-size: 0.5rem;
+}
+
+.element .symbol {
+    font-size: 1rem;
+}
+
+.element .name {
+    font-size: 0.45rem;
+}
+
+@media (min-width: 768px) {
+    .element .number { font-size: 0.6rem; }
+    .element .symbol { font-size: 1.25rem; }
+    .element .name { font-size: 0.5rem; }
+}
+
+@media (min-width: 1200px) {
+    .element .number { font-size: 0.7rem; }
+    .element .symbol { font-size: 1.5rem; }
+    .element .name { font-size: 0.6rem; }
+}
+
+/* Ensure the wrapper allows smooth horizontal scrolling on mobile */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 1rem;
+}
+
+/* Add custom scrollbar styling for webkit */
+.table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+    background: #1e293b;
+    border-radius: 4px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #38bdf8;
+    border-radius: 4px;
+}
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #0284c7;
+}
+
+/* Make Modals scrollable vertically on small devices */
+#element-modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+#element-modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+#element-modal-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+#element-modal-content::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+}
+
+/* Bohr model scaling for mobile */
+#bohr-model {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    aspect-ratio: 1/1;
+}
+@media (min-width: 640px) {
+    #bohr-model {
+        max-width: 256px; /* w-64 */
+    }
+}
+
+
+/* Responsive Periodic Grid Base */
+.periodic-grid {
+    display: grid;
     /* On mobile, shrink elements down slightly to fit or scroll better */
     grid-template-columns: repeat(18, minmax(20px, 1fr)); 
     gap: 0.15rem;
