@@ -11,6 +11,19 @@
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 font-vazirmatn">
 
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4 transition-opacity duration-500">
+        <div class="bg-slate-800 border-2 border-cyan-500 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl shadow-cyan-500/20">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-2">پازل جدول تناوبی</h1>
+            <p class="text-slate-400 mb-8">برای ورود به سایت و ثبت امتیازات، لطفاً نام خود را وارد کنید.</p>
+            <input type="text" id="player-name-input" placeholder="نام شما..." class="w-full bg-slate-900 text-white font-vazirmatn px-4 py-3 rounded-xl border border-slate-600 focus:outline-none focus:border-cyan-500 mb-4 text-center text-lg transition-colors">
+            <button id="submit-name-btn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-cyan-500/30">
+                ورود به سایت
+            </button>
+        </div>
+    </div>
+
+
     <div id="landscape-warning" class="hidden md:hidden fixed inset-0 bg-slate-900 z-50 flex-col items-center justify-center p-6 text-center">
         <svg class="w-16 h-16 text-slate-400 mb-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <rect x="5" y="2" width="14" height="20" rx="2" stroke-width="2"></rect>

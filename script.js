@@ -427,6 +427,7 @@ let timeElapsed = 0;
 let timerInterval;
 let gameMode = 'symbol'; // 'symbol' or 'name'
 let isGameActive = false;
+let playerName = "";
 
 // DOM Elements
 const tableEl = document.getElementById('periodic-table');
@@ -685,14 +686,11 @@ function endGame(win) {
     
     finalScoreEl.textContent = score;
     
-    // Save to Leaderboard logic
+        // Save to Leaderboard logic
     setTimeout(() => {
-        if (score > 0) {
-            const playerName = prompt("بازی تمام شد! امتیاز شما: " + score + "\nلطفاً نام خود را برای ثبت در لیدربورد وارد کنید:");
-            if (playerName && playerName.trim() !== "") {
-                document.getElementById('leaderboard-modal').classList.remove('hidden');
-                saveScoreToDB(playerName.trim(), score);
-            }
+        if (score > 0 && playerName) {
+            document.getElementById('leaderboard-modal').classList.remove('hidden');
+            saveScoreToDB(playerName, score);
         }
     }, 500); // slight delay so modal renders first
 }
@@ -710,4 +708,27 @@ restartBtn.addEventListener('click', () => {
 // Initial empty grid for visual structure before start
 document.addEventListener('DOMContentLoaded', () => {
     createGrid(false);
+});
+
+// Welcome Modal Logic
+document.getElementById('submit-name-btn').addEventListener('click', () => {
+    const input = document.getElementById('player-name-input');
+    if (input.value.trim() !== '') {
+        playerName = input.value.trim();
+        const welcomeModal = document.getElementById('welcome-modal');
+        welcomeModal.style.opacity = '0';
+        setTimeout(() => welcomeModal.classList.add('hidden'), 500); // Wait for fade out
+    } else {
+        input.classList.add('border-rose-500');
+        input.classList.remove('border-slate-600');
+        setTimeout(() => {
+            input.classList.remove('border-rose-500');
+            input.classList.add('border-slate-600');
+        }, 1000);
+    }
+});
+document.getElementById('player-name-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        document.getElementById('submit-name-btn').click();
+    }
 });
