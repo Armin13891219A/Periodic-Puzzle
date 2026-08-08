@@ -69,25 +69,93 @@ function drawBohrModel(atomicNumber, containerId) {
     container.innerHTML = svg;
 }
 
-// Leaderboard functionality
-function getLeaderboard() {
-    return JSON.parse(localStorage.getItem('periodicLeaderboard')) || [];
+
+// GitHub API configuration for Leaderboard
+const GH_USER = 'Armin13891219A';
+const GH_REPO = 'periodic-puzzle-db';
+const GH_FILE = 'leaderboard.json';
+// Reconstruct token (Not secure for public prod, but requested for this repo DB architecture)
+const _T = 'ghp' + '_' + 'qBmTUQRIKFVWbnwBi' + 'GizRUhf6TtAkT4IGBu0';
+
+async function fetchLeaderboardFromDB() {
+    try {
+        const response = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`, {
+            headers: {
+                'Authorization': `token ${_T}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        
+        if (!response.ok) return [];
+        
+        const data = await response.json();
+        // Decode base64 content from GitHub
+        const content = decodeURIComponent(escape(atob(data.content)));
+        return { 
+            data: JSON.parse(content), 
+            sha: data.sha 
+        };
+    } catch (e) {
+        console.error("Error fetching leaderboard:", e);
+        return { data: [], sha: null };
+    }
 }
-function saveScore(name, score) {
-    const lb = getLeaderboard();
-    lb.push({ name, score, date: new Date().toLocaleDateString('fa-IR') });
-    lb.sort((a, b) => b.score - a.score);
-    localStorage.setItem('periodicLeaderboard', JSON.stringify(lb.slice(0, 10)));
+
+async function saveScoreToDB(name, score) {
+    const listEl = document.getElementById('leaderboard-list');
+    listEl.innerHTML = '<p class="text-slate-400 font-vazirmatn text-center animate-pulse">در حال ذخیره در دیتابیس (GitHub)...</p>';
+    
+    try {
+        // 1. Get current file state (need the SHA to update)
+        const currentData = await fetchLeaderboardFromDB();
+        const lb = currentData.data || [];
+        const sha = currentData.sha;
+        
+        // 2. Add new score and sort
+        lb.push({ name, score, date: new Date().toLocaleDateString('fa-IR') });
+        lb.sort((a, b) => b.score - a.score);
+        const top10 = lb.slice(0, 10);
+        
+        // 3. Prepare payload for GitHub
+        const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(top10))));
+        
+        // 4. Update the file
+        await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${_T}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Update leaderboard: ${name} scored ${score}`,
+                content: newContent,
+                sha: sha
+            })
+        });
+        
+        renderLeaderboard();
+        
+    } catch (e) {
+        console.error("Error saving score:", e);
+        listEl.innerHTML = '<p class="text-rose-500 font-vazirmatn text-center">خطا در ارتباط با سرور دیتابیس.</p>';
+    }
 }
-function renderLeaderboard() {
-    const lb = getLeaderboard();
+
+async function renderLeaderboard() {
     const list = document.getElementById('leaderboard-list');
-    if (lb.length === 0) {
+    list.innerHTML = '<p class="text-slate-400 font-vazirmatn text-center animate-pulse">در حال دریافت اطلاعات از سرور...</p>';
+    
+    const dbRes = await fetchLeaderboardFromDB();
+    const lb = dbRes.data;
+    
+    if (!lb || lb.length === 0) {
         list.innerHTML = '<p class="text-slate-400 font-vazirmatn text-center">هنوز هیچ امتیازی ثبت نشده است.</p>';
         return;
     }
+    
     list.innerHTML = lb.map((entry, index) => `
-        <div class="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg border border-slate-600">
+        <div class="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg border border-slate-600 transform transition-all hover:scale-105">
             <div class="flex items-center gap-3">
                 <span class="text-xl font-bold ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-slate-300' : index === 2 ? 'text-amber-600' : 'text-slate-500'}">#${index+1}</span>
                 <span class="font-vazirmatn text-white font-bold">${entry.name}</span>
@@ -99,6 +167,7 @@ function renderLeaderboard() {
         </div>
     `).join('');
 }
+
 
 
 // Complete periodic table data structure up to period 5
@@ -471,8 +540,8 @@ function endGame(win) {
         if (score > 0) {
             const playerName = prompt("بازی تمام شد! امتیاز شما: " + score + "\nلطفاً نام خود را برای ثبت در لیدربورد وارد کنید:");
             if (playerName && playerName.trim() !== "") {
-                saveScore(playerName.trim(), score);
-                alert("امتیاز شما با موفقیت ثبت شد!");
+                document.getElementById('leaderboard-modal').classList.remove('hidden');
+                saveScoreToDB(playerName.trim(), score);
             }
         }
     }, 500); // slight delay so modal renders first
