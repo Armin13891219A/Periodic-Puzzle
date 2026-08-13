@@ -695,10 +695,93 @@ function createGrid(activeGame = false) {
         tableEl.classList.remove('explore-mode', 'selection-mode');
     }
     
+    // Add Row / Column selectors if in Selection Mode
+    if (!activeGame && isSelectionMode) {
+        // 1. Column selectors at the very top (Row 1)
+        // Add a blank top-left spacer for the row header
+        const topLeftSpacer = document.createElement('div');
+        topLeftSpacer.className = 'grid-column-selector';
+        topLeftSpacer.style.gridRow = '1';
+        topLeftSpacer.style.gridColumn = '1';
+        tableEl.appendChild(topLeftSpacer);
+        
+        for (let col = 1; col <= 18; col++) {
+            const colBtn = document.createElement('button');
+            colBtn.className = 'col-selector-btn';
+            colBtn.style.gridRow = '1';
+            colBtn.style.gridColumn = `${col + 1}`;
+            colBtn.textContent = `C${col}`;
+            colBtn.title = `انتخاب کل ستون ${col}`;
+            colBtn.addEventListener('click', () => {
+                selectRowOrColumn('col', col);
+            });
+            tableEl.appendChild(colBtn);
+        }
+
+        // 2. Row selectors on the very left (Column 1)
+        // Rows 1-7 correspond to periods 1-7
+        for (let row = 1; row <= 7; row++) {
+            const rowBtn = document.createElement('button');
+            rowBtn.className = 'row-selector-btn';
+            rowBtn.style.gridRow = `${row + 1}`;
+            rowBtn.style.gridColumn = '1';
+            rowBtn.textContent = `R${row}`;
+            rowBtn.title = `انتخاب کل ردیف ${row}`;
+            rowBtn.addEventListener('click', () => {
+                selectRowOrColumn('row', row);
+            });
+            tableEl.appendChild(rowBtn);
+        }
+
+        // Row selectors for Lanthanides (displayed row 10 in CSS) and Actinides (displayed row 11 in CSS)
+        // R8 is Lanthanides, R9 is Actinides
+        const lanthBtn = document.createElement('button');
+        lanthBtn.className = 'row-selector-btn';
+        lanthBtn.style.gridRow = '10';
+        lanthBtn.style.gridColumn = '1';
+        lanthBtn.textContent = 'La';
+        lanthBtn.title = 'انتخاب لانتانیدها';
+        lanthBtn.addEventListener('click', () => {
+            selectRowOrColumn('row', 6);
+        });
+        tableEl.appendChild(lanthBtn);
+
+        const actBtn = document.createElement('button');
+        actBtn.className = 'row-selector-btn';
+        actBtn.style.gridRow = '11';
+        actBtn.style.gridColumn = '1';
+        actBtn.textContent = 'Ac';
+        actBtn.title = 'انتخاب اکتینیدها';
+        actBtn.addEventListener('click', () => {
+            selectRowOrColumn('row', 7);
+        });
+        tableEl.appendChild(actBtn);
+    }
+
     elementData.forEach(el => {
         const cell = document.createElement('div');
+        
+        // Offset rows/columns in the grid if selector headers are present
+        // Standard elements are offset by 1 column (to make room for row buttons)
+        // and 1 row (to make room for column buttons) if selectors are active.
+        let targetRow = el.p;
+        let targetCol = el.g + 1; // Always shifted by 1 column for row selectors layout symmetry
+
+        if (!activeGame && isSelectionMode) {
+            targetRow = el.p + 1; // Shift down by 1 row for column selectors
+        }
+        
+        // Handle special period rows layout overrides
+        if (el.p === 9) { // Lanthanides
+            targetRow = !activeGame && isSelectionMode ? 10 : 9;
+        } else if (el.p === 10) { // Actinides
+            targetRow = !activeGame && isSelectionMode ? 11 : 10;
+        }
+        
         // Base classes
-        cell.className = `element font-english period-${el.p} group-${el.g}`;
+        cell.className = `element font-english`;
+        cell.style.gridRow = `${targetRow}`;
+        cell.style.gridColumn = `${targetCol}`;
         
         // Handle Explore Mode, Selection Mode, or Active Game
         if (!activeGame) {

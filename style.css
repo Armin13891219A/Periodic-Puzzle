@@ -26,13 +26,13 @@
 /* The Grid itself */
 .periodic-grid {
     display: grid;
-    /* Force 18 equal columns */
-    grid-template-columns: repeat(18, 1fr);
+    /* Force 19 equal columns (17 standard + 1 row selector + 1 spacer) */
+    grid-template-columns: minmax(25px, 35px) repeat(18, 1fr);
     gap: 0.25rem;
     padding: 0.5rem;
     /* This is the magic! Never let the table shrink below 1050px. 
        On mobile, the table-wrapper will just scroll it horizontally. */
-    min-width: 1050px; 
+    min-width: 1100px; 
     margin: 0 auto;
 }
 
@@ -307,45 +307,118 @@ body {
 
 /* Grid Layout Placement based on standard Periodic Table */
 /* Using generic classes that will be applied by JS based on group/period */
-.period-1 { grid-row: 1; }
-.period-2 { grid-row: 2; }
-.period-3 { grid-row: 3; }
-.period-4 { grid-row: 4; }
-.period-5 { grid-row: 5; }
-.period-6 { grid-row: 6; }
-.period-7 { grid-row: 7; }
+/* Note: when headers are disabled (Active Game / Explore Mode), el.p maps to standard rows.
+   But we need to ensure Lanthanides (p:9) and Actinides (p:10) always map to grid-rows 9 and 10 */
+.element:not([style*="grid-row"]) {
+    /* fallback rules if style is not injected dynamically */
+}
 
-.group-1 { grid-column: 1; }
-.group-2 { grid-column: 2; }
-.group-3 { grid-column: 3; }
-.group-4 { grid-column: 4; }
-.group-5 { grid-column: 5; }
-.group-6 { grid-column: 6; }
-.group-7 { grid-column: 7; }
-.group-8 { grid-column: 8; }
-.group-9 { grid-column: 9; }
-.group-10 { grid-column: 10; }
-.group-11 { grid-column: 11; }
-.group-12 { grid-column: 12; }
-.group-13 { grid-column: 13; }
-.group-14 { grid-column: 14; }
-.group-15 { grid-column: 15; }
-.group-16 { grid-column: 16; }
-.group-17 { grid-column: 17; }
-.group-18 { grid-column: 18; }
+.period-1:not([style*="grid-row"]) { grid-row: 1; }
+.period-2:not([style*="grid-row"]) { grid-row: 2; }
+.period-3:not([style*="grid-row"]) { grid-row: 3; }
+.period-4:not([style*="grid-row"]) { grid-row: 4; }
+.period-5:not([style*="grid-row"]) { grid-row: 5; }
+.period-6:not([style*="grid-row"]) { grid-row: 6; }
+.period-7:not([style*="grid-row"]) { grid-row: 7; }
+.period-9:not([style*="grid-row"]) { grid-row: 9; }
+.period-10:not([style*="grid-row"]) { grid-row: 10; }
+
+.group-1:not([style*="grid-column"]) { grid-column: 1; }
+.group-2:not([style*="grid-column"]) { grid-column: 2; }
+.group-3:not([style*="grid-column"]) { grid-column: 3; }
+.group-4:not([style*="grid-column"]) { grid-column: 4; }
+.group-5:not([style*="grid-column"]) { grid-column: 5; }
+.group-6:not([style*="grid-column"]) { grid-column: 6; }
+.group-7:not([style*="grid-column"]) { grid-column: 7; }
+.group-8:not([style*="grid-column"]) { grid-column: 8; }
+.group-9:not([style*="grid-column"]) { grid-column: 9; }
+.group-10:not([style*="grid-column"]) { grid-column: 10; }
+.group-11:not([style*="grid-column"]) { grid-column: 11; }
+.group-12:not([style*="grid-column"]) { grid-column: 12; }
+.group-13:not([style*="grid-column"]) { grid-column: 13; }
+.group-14:not([style*="grid-column"]) { grid-column: 14; }
+.group-15:not([style*="grid-column"]) { grid-column: 15; }
+.group-16:not([style*="grid-column"]) { grid-column: 16; }
+.group-17:not([style*="grid-column"]) { grid-column: 17; }
+.group-18:not([style*="grid-column"]) { grid-column: 18; }
+
+/* Selection Mode Styles */
+.selection-mode .element {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.4;
+    filter: saturate(0.5);
+}
+.selection-mode .element.selected-for-quiz {
+    opacity: 1;
+    filter: saturate(1);
+    box-shadow: 0 0 12px var(--c-transition), inset 0 0 0 2px #fff;
+    transform: scale(1.05);
+    z-index: 10;
+}
+.selection-mode .element:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+    z-index: 20;
+}
+
+/* Quick Select Headers and Row handles */
+.col-selector-btn {
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: #38bdf8;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 2px 0;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    margin-bottom: 2px;
+}
+.col-selector-btn:hover {
+    background: #0ea5e9;
+    color: white;
+    border-color: #38bdf8;
+}
+
+.row-selector-btn {
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: #c084fc;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 0 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    margin-right: 2px;
+}
+.row-selector-btn:hover {
+    background: #a855f7;
+    color: white;
+    border-color: #c084fc;
+}
 
 /* Spacer block */
 .period-8 {
-    grid-row: 8;
-    grid-column: 1 / span 18;
-    height: 40px; /* Space between row 7 and Lanthanides */
+    grid-row: 9; /* Shifted down to row 9 because selector header added a row */
+    grid-column: 1 / span 19;
+    height: 40px; /* Space between row 7 (Period 7) and Lanthanides */
     pointer-events: none;
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
 }
-.period-9 { grid-row: 9; }
-.period-10 { grid-row: 10; }
+.period-9 { grid-row: 10; } /* Shifted because of header row */
+.period-10 { grid-row: 11; } /* Shifted because of header row */
 
 /* Selection Mode Styles */
 .selection-mode .element {
