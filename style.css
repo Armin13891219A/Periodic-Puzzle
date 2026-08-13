@@ -26,14 +26,16 @@
 /* The Grid itself */
 .periodic-grid {
     display: grid;
-    /* Force 19 equal columns (17 standard + 1 row selector + 1 spacer) */
-    grid-template-columns: minmax(25px, 35px) repeat(18, 1fr);
+    /* On normal state: 18 columns. On selection mode: 19 columns (1 spacer + 18 cols) */
+    grid-template-columns: repeat(18, 1fr);
     gap: 0.25rem;
     padding: 0.5rem;
-    /* This is the magic! Never let the table shrink below 1050px. 
-       On mobile, the table-wrapper will just scroll it horizontally. */
-    min-width: 1100px; 
+    min-width: 1050px; 
     margin: 0 auto;
+}
+.periodic-grid.selection-mode {
+    grid-template-columns: minmax(25px, 35px) repeat(18, 1fr);
+    min-width: 1100px;
 }
 
 /* Ensure elements scale nicely within their fixed-width grid cells */
@@ -323,24 +325,36 @@ body {
 .period-9:not([style*="grid-row"]) { grid-row: 9; }
 .period-10:not([style*="grid-row"]) { grid-row: 10; }
 
-.group-1:not([style*="grid-column"]) { grid-column: 1; }
-.group-2:not([style*="grid-column"]) { grid-column: 2; }
-.group-3:not([style*="grid-column"]) { grid-column: 3; }
-.group-4:not([style*="grid-column"]) { grid-column: 4; }
-.group-5:not([style*="grid-column"]) { grid-column: 5; }
-.group-6:not([style*="grid-column"]) { grid-column: 6; }
-.group-7:not([style*="grid-column"]) { grid-column: 7; }
-.group-8:not([style*="grid-column"]) { grid-column: 8; }
-.group-9:not([style*="grid-column"]) { grid-column: 9; }
-.group-10:not([style*="grid-column"]) { grid-column: 10; }
-.group-11:not([style*="grid-column"]) { grid-column: 11; }
-.group-12:not([style*="grid-column"]) { grid-column: 12; }
-.group-13:not([style*="grid-column"]) { grid-column: 13; }
-.group-14:not([style*="grid-column"]) { grid-column: 14; }
-.group-15:not([style*="grid-column"]) { grid-column: 15; }
-.group-16:not([style*="grid-column"]) { grid-column: 16; }
-.group-17:not([style*="grid-column"]) { grid-column: 17; }
-.group-18:not([style*="grid-column"]) { grid-column: 18; }
+/* Grid rules for standard explore/game mode layout */
+.periodic-grid:not(.selection-mode) .element.period-1 { grid-row: 1; }
+.periodic-grid:not(.selection-mode) .element.period-2 { grid-row: 2; }
+.periodic-grid:not(.selection-mode) .element.period-3 { grid-row: 3; }
+.periodic-grid:not(.selection-mode) .element.period-4 { grid-row: 4; }
+.periodic-grid:not(.selection-mode) .element.period-5 { grid-row: 5; }
+.periodic-grid:not(.selection-mode) .element.period-6 { grid-row: 6; }
+.periodic-grid:not(.selection-mode) .element.period-7 { grid-row: 7; }
+.periodic-grid:not(.selection-mode) .element.period-8 { grid-row: 8; }
+.periodic-grid:not(.selection-mode) .element.period-9 { grid-row: 9; }
+.periodic-grid:not(.selection-mode) .element.period-10 { grid-row: 10; }
+
+.periodic-grid:not(.selection-mode) .element.group-1 { grid-column: 1; }
+.periodic-grid:not(.selection-mode) .element.group-2 { grid-column: 2; }
+.periodic-grid:not(.selection-mode) .element.group-3 { grid-column: 3; }
+.periodic-grid:not(.selection-mode) .element.group-4 { grid-column: 4; }
+.periodic-grid:not(.selection-mode) .element.group-5 { grid-column: 5; }
+.periodic-grid:not(.selection-mode) .element.group-6 { grid-column: 6; }
+.periodic-grid:not(.selection-mode) .element.group-7 { grid-column: 7; }
+.periodic-grid:not(.selection-mode) .element.group-8 { grid-column: 8; }
+.periodic-grid:not(.selection-mode) .element.group-9 { grid-column: 9; }
+.periodic-grid:not(.selection-mode) .element.group-10 { grid-column: 10; }
+.periodic-grid:not(.selection-mode) .element.group-11 { grid-column: 11; }
+.periodic-grid:not(.selection-mode) .element.group-12 { grid-column: 12; }
+.periodic-grid:not(.selection-mode) .element.group-13 { grid-column: 13; }
+.periodic-grid:not(.selection-mode) .element.group-14 { grid-column: 14; }
+.periodic-grid:not(.selection-mode) .element.group-15 { grid-column: 15; }
+.periodic-grid:not(.selection-mode) .element.group-16 { grid-column: 16; }
+.periodic-grid:not(.selection-mode) .element.group-17 { grid-column: 17; }
+.periodic-grid:not(.selection-mode) .element.group-18 { grid-column: 18; }
 
 /* Selection Mode Styles */
 .selection-mode .element {
@@ -409,16 +423,13 @@ body {
 
 /* Spacer block */
 .period-8 {
-    grid-row: 9; /* Shifted down to row 9 because selector header added a row */
     grid-column: 1 / span 19;
-    height: 40px; /* Space between row 7 (Period 7) and Lanthanides */
+    height: 40px; /* Space between row 7 and Lanthanides */
     pointer-events: none;
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
 }
-.period-9 { grid-row: 10; } /* Shifted because of header row */
-.period-10 { grid-row: 11; } /* Shifted because of header row */
 
 /* Selection Mode Styles */
 .selection-mode .element {

@@ -612,7 +612,6 @@ window.selectRowOrColumn = function(type, index) {
     // In elementData:
     // Period 9 represents Lanthanides (displayed in row 9)
     // Period 10 represents Actinides (displayed in row 10)
-    // So row 6 = Period 9, row 7 = Period 10 (since period 8 is the spacer)
     let targetP = [];
     if (type === 'row') {
         if (index === 6) {
@@ -624,13 +623,34 @@ window.selectRowOrColumn = function(type, index) {
         }
     }
 
+    // Determine if we should select or deselect.
+    // We check if all elements in this row/column are currently selected.
+    // If all are selected, we deselect them all. Else, we select them all (toggle behavior).
+    let targetElements = [];
     elementData.forEach(e => {
         if (type === 'row' && targetP.includes(e.p)) {
-            customSelectedElements.add(e.num);
+            targetElements.push(e);
         } else if (type === 'col' && e.g === index) {
-            customSelectedElements.add(e.num);
+            targetElements.push(e);
         }
     });
+
+    if (targetElements.length === 0) return;
+
+    const allSelected = targetElements.every(e => customSelectedElements.has(e.num));
+
+    if (allSelected) {
+        // Deselect all
+        targetElements.forEach(e => {
+            customSelectedElements.delete(e.num);
+        });
+    } else {
+        // Select all
+        targetElements.forEach(e => {
+            customSelectedElements.add(e.num);
+        });
+    }
+
     createGrid(false);
 }
 
@@ -765,10 +785,11 @@ function createGrid(activeGame = false) {
         // Standard elements are offset by 1 column (to make room for row buttons)
         // and 1 row (to make room for column buttons) if selectors are active.
         let targetRow = el.p;
-        let targetCol = el.g + 1; // Always shifted by 1 column for row selectors layout symmetry
+        let targetCol = el.g; // Standard column index (1-18)
 
         if (!activeGame && isSelectionMode) {
             targetRow = el.p + 1; // Shift down by 1 row for column selectors
+            targetCol = el.g + 1; // Shift right by 1 column for row selectors
         }
         
         // Handle special period rows layout overrides
@@ -776,6 +797,16 @@ function createGrid(activeGame = false) {
             targetRow = !activeGame && isSelectionMode ? 10 : 9;
         } else if (el.p === 10) { // Actinides
             targetRow = !activeGame && isSelectionMode ? 11 : 10;
+        }
+        
+        // Let's output a spacer element at grid-row 9 (when in selection mode) or grid-row 8 (when normal)
+        // only once, so we don't duplicate it.
+        if (el.num === 57) { // lanthanum is the start of Lanthanides display block area
+            const spacer = document.createElement('div');
+            spacer.className = 'element period-8';
+            spacer.style.gridRow = !activeGame && isSelectionMode ? '9' : '8';
+            spacer.style.gridColumn = !activeGame && isSelectionMode ? '1 / span 19' : '1 / span 18';
+            tableEl.appendChild(spacer);
         }
         
         // Base classes
