@@ -594,6 +594,46 @@ const restartBtn = document.getElementById('restart-btn');
 let customSelectedElements = new Set();
 let isSelectionMode = false;
 
+window.selectAllCustom = function(select) {
+    if (!isSelectionMode) return;
+    if (select) {
+        elementData.forEach(e => {
+            customSelectedElements.add(e.num);
+        });
+    } else {
+        customSelectedElements.clear();
+    }
+    createGrid(false);
+}
+
+window.selectRowOrColumn = function(type, index) {
+    if (!isSelectionMode) return;
+    
+    // In elementData:
+    // Period 9 represents Lanthanides (displayed in row 9)
+    // Period 10 represents Actinides (displayed in row 10)
+    // So row 6 = Period 9, row 7 = Period 10 (since period 8 is the spacer)
+    let targetP = [];
+    if (type === 'row') {
+        if (index === 6) {
+            targetP = [9]; // Lanthanides
+        } else if (index === 7) {
+            targetP = [10]; // Actinides
+        } else {
+            targetP = [index];
+        }
+    }
+
+    elementData.forEach(e => {
+        if (type === 'row' && targetP.includes(e.p)) {
+            customSelectedElements.add(e.num);
+        } else if (type === 'col' && e.g === index) {
+            customSelectedElements.add(e.num);
+        }
+    });
+    createGrid(false);
+}
+
 window.toggleRangeSelectionUI = function() {
     const rangeMode = document.querySelector('input[name="range-select-mode"]:checked').value;
     const instructionEl = document.getElementById('selection-instruction');
