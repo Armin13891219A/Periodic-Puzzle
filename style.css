@@ -115,158 +115,6 @@
     }
 }
 
-/* Base element sizes */
-.element {
-    padding: 0.2rem;
-}
-
-.element .number {
-    font-size: 0.5rem;
-}
-
-.element .symbol {
-    font-size: 1rem;
-}
-
-.element .name {
-    font-size: 0.45rem;
-}
-
-@media (min-width: 768px) {
-    .element .number { font-size: 0.6rem; }
-    .element .symbol { font-size: 1.25rem; }
-    .element .name { font-size: 0.5rem; }
-}
-
-@media (min-width: 1200px) {
-    .element .number { font-size: 0.7rem; }
-    .element .symbol { font-size: 1.5rem; }
-    .element .name { font-size: 0.6rem; }
-}
-
-/* Ensure the wrapper allows smooth horizontal scrolling on mobile */
-.table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 1rem;
-}
-
-/* Add custom scrollbar styling for webkit */
-.table-wrapper::-webkit-scrollbar {
-    height: 8px;
-}
-.table-wrapper::-webkit-scrollbar-track {
-    background: #1e293b;
-    border-radius: 4px;
-}
-.table-wrapper::-webkit-scrollbar-thumb {
-    background: #38bdf8;
-    border-radius: 4px;
-}
-.table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #0284c7;
-}
-
-/* Make Modals scrollable vertically on small devices */
-#element-modal-content {
-    max-height: 90vh;
-    overflow-y: auto;
-}
-#element-modal-content::-webkit-scrollbar {
-    width: 6px;
-}
-#element-modal-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-#element-modal-content::-webkit-scrollbar-thumb {
-    background: #475569;
-    border-radius: 3px;
-}
-
-/* Bohr model scaling for mobile */
-#bohr-model {
-    width: 100%;
-    max-width: 200px;
-    height: auto;
-    aspect-ratio: 1/1;
-}
-@media (min-width: 640px) {
-    #bohr-model {
-        max-width: 256px; /* w-64 */
-    }
-}
-
-
-/* Responsive Periodic Grid Base */
-.periodic-grid {
-    display: grid;
-    /* On mobile, shrink elements down slightly to fit or scroll better */
-    grid-template-columns: repeat(18, minmax(20px, 1fr)); 
-    gap: 0.15rem;
-    position: relative;
-    padding: 0.5rem;
-    max-width: 1300px;
-    width: 100%;
-}
-
-@media (min-width: 640px) {
-    .periodic-grid {
-        grid-template-columns: repeat(18, minmax(30px, 1fr));
-        gap: 0.2rem;
-        padding: 1rem;
-    }
-}
-
-@media (min-width: 1024px) {
-    .periodic-grid {
-        grid-template-columns: repeat(18, minmax(45px, 1fr));
-        gap: 0.25rem;
-    }
-}
-
-/* Adjust element sizes on small screens */
-.element {
-    padding: 0.1rem;
-}
-
-.element .number {
-    font-size: 0.4rem;
-}
-
-.element .symbol {
-    font-size: 0.8rem;
-}
-
-.element .name {
-    font-size: 0.35rem;
-    opacity: 0; /* Hide full names on very small screens to avoid clutter */
-}
-
-@media (min-width: 640px) {
-    .element .number { font-size: 0.5rem; }
-    .element .symbol { font-size: 1rem; }
-    .element .name { font-size: 0.4rem; opacity: 0.8; }
-}
-
-@media (min-width: 1024px) {
-    .element { padding: 0.25rem; }
-    .element .number { font-size: 0.65rem; }
-    .element .symbol { font-size: 1.25rem; }
-    .element .name { font-size: 0.5rem; opacity: 0.8; }
-}
-
-/* Fix main container overflow on mobile */
-.overflow-x-auto {
-    /* Allow scrolling only if it truly overflows, but avoid horizontal scrollbars if we can */
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Hide Landscape Warning if we are now fully responsive */
-#landscape-warning {
-    display: none !important;
-}
-
 /* CSS based on the requested target site's design */
 
 :root {
@@ -454,14 +302,14 @@ body {
 .period-8 {
     grid-row: 8;
     grid-column: 1 / span 18;
-    height: 15px;
+    height: 40px; /* Increased spacer height */
     pointer-events: none;
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
 }
-.period-9 { grid-row: 9; }
-.period-10 { grid-row: 10; }
+.period-9 { grid-row: 9; margin-top: 20px; }
+.period-10 { grid-row: 10; margin-top: 20px; }
 
 /* Selection Mode Styles */
 .selection-mode .element {

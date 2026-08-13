@@ -135,11 +135,16 @@
 
     <!-- Leaderboard Modal -->
     <div id="leaderboard-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div id="leaderboard-modal-content" class="bg-slate-800 border-2 border-yellow-500 rounded-3xl p-8 max-w-lg w-full text-center shadow-2xl shadow-yellow-500/20 relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <h2 class="text-3xl font-extrabold text-yellow-400 mb-6">🏆 نفرات برتر</h2>
-            <div id="leaderboard-list" class="flex flex-col gap-3 font-english text-left overflow-x-auto w-full">
-                <!-- Scores injected here -->
+        <div id="leaderboard-modal-content" class="bg-slate-800 border-2 border-yellow-500 rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl shadow-yellow-500/20 relative max-h-[85vh] flex flex-col justify-between" onclick="event.stopPropagation()">
+            <div>
+                <h2 class="text-3xl font-extrabold text-yellow-400 mb-6">🏆 نفرات برتر</h2>
+                <div id="leaderboard-list" class="flex flex-col gap-3 font-english text-left overflow-y-auto max-h-[50vh] pr-1">
+                    <!-- Scores injected here -->
+                </div>
             </div>
+            <button onclick="document.getElementById('leaderboard-modal').classList.add('hidden')" class="mt-6 w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl transition-all">
+                بستن
+            </button>
         </div>
     </div>
 

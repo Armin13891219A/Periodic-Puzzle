@@ -336,18 +336,34 @@ async function renderLeaderboard() {
 
 function displayLeaderboardList(lb) {
     const list = document.getElementById('leaderboard-list');
-    list.innerHTML = lb.map((entry, index) => `
-        <div class="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg border border-slate-600 transform transition-all hover:scale-[1.02] min-w-[280px]">
-            <div class="flex items-center gap-3">
-                <span class="text-xl font-bold ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-slate-300' : index === 2 ? 'text-amber-600' : 'text-slate-500'}">#${index+1}</span>
-                <span class="font-vazirmatn text-white font-bold max-w-[120px] md:max-w-[200px] truncate block">${entry.name}</span>
+    list.innerHTML = lb.map((entry, index) => {
+        let badgeColor = 'text-slate-500';
+        let badgeBg = 'bg-slate-800/40';
+        if (index === 0) {
+            badgeColor = 'text-yellow-400';
+            badgeBg = 'bg-yellow-500/10 border-yellow-500/30';
+        } else if (index === 1) {
+            badgeColor = 'text-slate-300';
+            badgeBg = 'bg-slate-300/10 border-slate-300/20';
+        } else if (index === 2) {
+            badgeColor = 'text-amber-600';
+            badgeBg = 'bg-amber-700/10 border-amber-700/20';
+        }
+
+        return `
+        <div class="flex items-center justify-between bg-slate-900/60 p-4 rounded-xl border border-slate-700/80 hover:border-yellow-500/40 transition-all duration-300 hover:translate-y-[-2px] ${badgeBg}">
+            <div class="flex items-center gap-4">
+                <span class="text-2xl font-black ${badgeColor} w-8 text-center font-english">#${index+1}</span>
+                <div class="h-8 w-[2px] bg-slate-700"></div>
+                <span class="font-vazirmatn text-white text-base font-bold truncate max-w-[150px] sm:max-w-[220px]" title="${entry.name}">${entry.name}</span>
             </div>
-            <div class="text-right flex items-center gap-4">
-                <span class="text-cyan-400 font-bold whitespace-nowrap">${entry.score} pts</span>
-                <span class="text-xs text-slate-400 font-vazirmatn whitespace-nowrap">${entry.date}</span>
+            <div class="flex items-center gap-4">
+                <span class="text-cyan-400 font-extrabold text-lg font-english whitespace-nowrap">${entry.score} <span class="text-xs text-slate-400 font-normal">pts</span></span>
+                <span class="text-xs text-slate-500 font-vazirmatn hidden sm:inline-block">${entry.date}</span>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 
@@ -605,6 +621,27 @@ window.toggleRangeSelectionUI = function() {
     createGrid(false);
 }
 
+// Ensure DOM binds toggleRangeSelectionUI even if loaded late
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial empty grid for visual structure before start
+    createGrid(false);
+    
+    // Bind change listeners to radios to ensure toggling works reliably
+    document.querySelectorAll('input[name="range-select-mode"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            window.toggleRangeSelectionUI();
+        });
+    });
+
+    // Make sure click listeners are bound to labels or elements when radios are checked programmatically
+    const modes = document.getElementsByName('range-select-mode');
+    modes.forEach(mode => {
+        mode.addEventListener('click', () => {
+            window.toggleRangeSelectionUI();
+        });
+    });
+});
+
 function createGrid(activeGame = false) {
     tableEl.innerHTML = '';
     
@@ -841,11 +878,6 @@ restartBtn.addEventListener('click', () => {
     gameDashboard.classList.remove('flex');
     modal.classList.add('hidden');
     createGrid(false); // Reset to display mode
-});
-
-// Initial empty grid for visual structure before start
-document.addEventListener('DOMContentLoaded', () => {
-    createGrid(false);
 });
 
 // Welcome Modal Logic
