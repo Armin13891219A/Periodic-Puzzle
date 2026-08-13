@@ -31,6 +31,11 @@
             <h1 class="text-2xl md:text-5xl font-extrabold mb-4 text-white">پازل جدول تناوبی</h1>
             <p class="max-w-2xl mx-auto text-sm md:text-lg text-slate-400 mb-8">عناصر ۸ گروه اصلی را در جایگاه صحیح خود قرار دهید.</p>
             
+            <!-- Setup Instructions for selecting custom elements -->
+            <div id="selection-instruction" class="max-w-2xl mx-auto text-sm text-cyan-400 bg-slate-800/80 border border-slate-700 p-3 rounded-xl mb-4 text-center hidden">
+                👈 روی عناصر در جدول زیر کلیک کنید تا به رنگ سبز درآیند و در آزمون شما قرار گیرند. (عناصر بدون رنگ در آزمون نخواهند بود)
+            </div>
+
             <div id="start-panel" class="max-w-xl mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl text-right">
                 <div class="mb-6">
                     <label class="block text-slate-300 mb-2 font-bold text-center">حالت آزمون:</label>
@@ -47,77 +52,15 @@
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-slate-300 mb-2 font-bold">محدوده دوره‌ها (تناوب):</label>
-                    <div class="flex flex-wrap gap-2 justify-center" id="period-selector">
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="period-filter" value="1" checked class="w-4 h-4 accent-cyan-400">
-                            ۱
+                    <label class="block text-slate-300 mb-2 font-bold">محدوده آزمون:</label>
+                    <div class="flex gap-4 justify-center">
+                        <label class="cursor-pointer flex items-center gap-2 text-white">
+                            <input type="radio" name="range-select-mode" value="all" checked class="w-5 h-5 accent-cyan-400" onchange="toggleRangeSelectionUI()">
+                            همه عناصر ۸ گروه اصلی (پیش‌فرض)
                         </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="period-filter" value="2" checked class="w-4 h-4 accent-cyan-400">
-                            ۲
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="period-filter" value="3" checked class="w-4 h-4 accent-cyan-400">
-                            ۳
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="period-filter" value="4" checked class="w-4 h-4 accent-cyan-400">
-                            ۴
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="period-filter" value="5" checked class="w-4 h-4 accent-cyan-400">
-                            ۵
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="period-filter" value="6" checked class="w-4 h-4 accent-cyan-400">
-                            ۶
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="period-filter" value="7" checked class="w-4 h-4 accent-cyan-400">
-                            ۷
-                        </label>
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-slate-300 mb-2 font-bold">بخش‌های مورد آزمون:</label>
-                    <div class="grid grid-cols-2 gap-2 text-right" id="category-selector">
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="category-filter" value="alkali" checked class="w-4 h-4 accent-cyan-400">
-                            فلزات قلیایی
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="category-filter" value="alkaline-earth" checked class="w-4 h-4 accent-cyan-400">
-                            فلزات قلیایی خاکی
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="category-filter" value="halogen" checked class="w-4 h-4 accent-cyan-400">
-                            هالوژن‌ها
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="category-filter" value="noble" checked class="w-4 h-4 accent-cyan-400">
-                            گازهای نجیب
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="category-filter" value="metalloid" checked class="w-4 h-4 accent-cyan-400">
-                            شبه‌فلزات
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="category-filter" value="nonmetal" checked class="w-4 h-4 accent-cyan-400">
-                            نافلزات
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="category-filter" value="post-transition" checked class="w-4 h-4 accent-cyan-400">
-                            فلزات پس‌واسطه
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-all border border-slate-600 select-none">
-                            <input type="checkbox" name="category-filter" value="transition" class="w-4 h-4 accent-cyan-400">
-                            فلزات واسطه
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-all border border-slate-600 select-none col-span-2">
-                            <input type="checkbox" name="category-filter" value="lanthanide,actinide" class="w-4 h-4 accent-cyan-400">
-                            لانتانیدها و اکتینیدها
+                        <label class="cursor-pointer flex items-center gap-2 text-white">
+                            <input type="radio" name="range-select-mode" value="custom" class="w-5 h-5 accent-cyan-400" onchange="toggleRangeSelectionUI()">
+                            انتخاب سفارشی روی جدول 🖱️
                         </label>
                     </div>
                 </div>

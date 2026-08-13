@@ -574,64 +574,77 @@ const modalMessage = document.getElementById('modal-message');
 const finalScoreEl = document.getElementById('final-score');
 const restartBtn = document.getElementById('restart-btn');
 
+// Selection Range Custom State
+let customSelectedElements = new Set();
+let isSelectionMode = false;
+
+window.toggleRangeSelectionUI = function() {
+    const rangeMode = document.querySelector('input[name="range-select-mode"]:checked').value;
+    const instructionEl = document.getElementById('selection-instruction');
+    
+    if (rangeMode === 'custom') {
+        isSelectionMode = true;
+        instructionEl.classList.remove('hidden');
+        tableEl.classList.add('selection-mode');
+        tableEl.classList.remove('explore-mode');
+        
+        // Setup initial selections (e.g. pre-select main block if empty)
+        if (customSelectedElements.size === 0) {
+            elementData.forEach(e => {
+                if (e.isMainBlock) {
+                    customSelectedElements.add(e.num);
+                }
+            });
+        }
+    } else {
+        isSelectionMode = false;
+        instructionEl.classList.add('hidden');
+        tableEl.classList.remove('selection-mode');
+        tableEl.classList.add('explore-mode');
+    }
+    createGrid(false);
+}
+
 function createGrid(activeGame = false) {
     tableEl.innerHTML = '';
     
-    if (!activeGame) {
+    if (!activeGame && !isSelectionMode) {
         tableEl.classList.add('explore-mode');
-    } else {
+        tableEl.classList.remove('selection-mode');
+    } else if (!activeGame && isSelectionMode) {
         tableEl.classList.remove('explore-mode');
+        tableEl.classList.add('selection-mode');
+    } else {
+        tableEl.classList.remove('explore-mode', 'selection-mode');
     }
     
-    // Get filter values if active game
-    let activePeriodFilters = [];
-    let activeCategoryFilters = [];
-    if (activeGame) {
-        document.querySelectorAll('input[name="period-filter"]:checked').forEach(cb => {
-            activePeriodFilters.push(parseInt(cb.value));
-        });
-        document.querySelectorAll('input[name="category-filter"]:checked').forEach(cb => {
-            cb.value.split(',').forEach(v => activeCategoryFilters.push(v.trim()));
-        });
-    }
-
     elementData.forEach(el => {
         const cell = document.createElement('div');
         // Base classes
         cell.className = `element font-english period-${el.p} group-${el.g}`;
         
-        // Check if this element fits current quiz query filters
-        const matchesFilters = !activeGame || (activePeriodFilters.includes(el.p) && activeCategoryFilters.includes(el.cat));
-
+        // Handle Explore Mode, Selection Mode, or Active Game
         if (!activeGame) {
-            // Interactive Explore Mode
-            cell.classList.add(`cat-${el.cat}`);
-            cell.addEventListener('click', () => openElementInfo(el));
-            cell.innerHTML = `
-                <span class="number" style="direction: ltr; text-align: left;">${el.num}</span>
-                <span class="symbol" style="direction: ltr;">${el.sym}</span>
-                <span class="name font-vazirmatn" style="direction: ltr;">${el.name}</span>
-            `;
-        }
-        else if (matchesFilters) {
-            // These are the puzzle targets
-            cell.classList.add('puzzle-target');
-            cell.dataset.atomic = el.num;
-            cell.addEventListener('click', () => handleCellClick(cell, el.num));
-            
-            // Add internal structure (hidden initially)
-            cell.innerHTML = `
-                <span class="number" style="direction: ltr; text-align: left;">${el.num}</span>
-                <span class="symbol" style="direction: ltr;">${el.sym}</span>
-                <span class="name font-vazirmatn" style="direction: ltr;">${el.name}</span>
-            `;
-            // Store color class to add later when correctly guessed
-            cell.dataset.colorClass = `cat-${el.cat}`;
-        } else {
-            // Pre-filled items (does not match current quiz filter or not in main block)
-            cell.classList.add(`cat-${el.cat}`);
-            if (activeGame) {
-                cell.classList.add('pre-filled');
+            if (isSelectionMode) {
+                // Custom selection logic
+                cell.classList.add(`cat-${el.cat}`);
+                if (customSelectedElements.has(el.num)) {
+                    cell.classList.add('selected-for-quiz');
+                }
+                
+                cell.addEventListener('click', () => {
+                    if (customSelectedElements.has(el.num)) {
+                        customSelectedElements.delete(el.num);
+                        cell.classList.remove('selected-for-quiz');
+                    } else {
+                        customSelectedElements.add(el.num);
+                        cell.classList.add('selected-for-quiz');
+                    }
+                });
+            } else {
+                // Interactive Explore Mode
+                cell.classList.add(`cat-${el.cat}`);
+                cell.addEventListener('click', () => openElementInfo(el));
             }
             
             cell.innerHTML = `
@@ -639,6 +652,37 @@ function createGrid(activeGame = false) {
                 <span class="symbol" style="direction: ltr;">${el.sym}</span>
                 <span class="name font-vazirmatn" style="direction: ltr;">${el.name}</span>
             `;
+        }
+        else {
+            // Check if this element fits current quiz range constraints
+            const rangeMode = document.querySelector('input[name="range-select-mode"]:checked').value;
+            const matchesFilters = rangeMode === 'all' ? el.isMainBlock : customSelectedElements.has(el.num);
+
+            if (matchesFilters) {
+                // These are the puzzle targets
+                cell.classList.add('puzzle-target');
+                cell.dataset.atomic = el.num;
+                cell.addEventListener('click', () => handleCellClick(cell, el.num));
+                
+                // Add internal structure (hidden initially)
+                cell.innerHTML = `
+                    <span class="number" style="direction: ltr; text-align: left;">${el.num}</span>
+                    <span class="symbol" style="direction: ltr;">${el.sym}</span>
+                    <span class="name font-vazirmatn" style="direction: ltr;">${el.name}</span>
+                `;
+                // Store color class to add later when correctly guessed
+                cell.dataset.colorClass = `cat-${el.cat}`;
+            } else {
+                // Pre-filled items (does not match current quiz filter)
+                cell.classList.add(`cat-${el.cat}`);
+                cell.classList.add('pre-filled');
+                
+                cell.innerHTML = `
+                    <span class="number" style="direction: ltr; text-align: left;">${el.num}</span>
+                    <span class="symbol" style="direction: ltr;">${el.sym}</span>
+                    <span class="name font-vazirmatn" style="direction: ltr;">${el.name}</span>
+                `;
+            }
         }
         
         tableEl.appendChild(cell);
@@ -650,15 +694,10 @@ function initGame() {
     const selectedMode = document.querySelector('input[name="mode"]:checked').value;
     gameMode = selectedMode;
     
-    // Get period and category filters
-    const activePeriodFilters = Array.from(document.querySelectorAll('input[name="period-filter"]:checked')).map(cb => parseInt(cb.value));
-    const activeCategoryFilters = [];
-    document.querySelectorAll('input[name="category-filter"]:checked').forEach(cb => {
-        cb.value.split(',').forEach(v => activeCategoryFilters.push(v.trim()));
-    });
-
-    if (activePeriodFilters.length === 0 || activeCategoryFilters.length === 0) {
-        alert("لطفاً حداقل یک دوره و یک بخش را برای آزمون انتخاب کنید.");
+    const rangeMode = document.querySelector('input[name="range-select-mode"]:checked').value;
+    
+    if (rangeMode === 'custom' && customSelectedElements.size === 0) {
+        alert("لطفاً حداقل یک عنصر را از روی جدول برای آزمون انتخاب کنید.");
         return;
     }
 
@@ -668,11 +707,15 @@ function initGame() {
     timeElapsed = 0;
     isGameActive = true;
     
-    // Filter element pool matching selected periods and categories
-    currentPool = elementData.filter(e => activePeriodFilters.includes(e.p) && activeCategoryFilters.includes(e.cat)).sort(() => Math.random() - 0.5);
+    // Filter element pool matching selected range
+    if (rangeMode === 'all') {
+        currentPool = elementData.filter(e => e.isMainBlock).sort(() => Math.random() - 0.5);
+    } else {
+        currentPool = elementData.filter(e => customSelectedElements.has(e.num)).sort(() => Math.random() - 0.5);
+    }
     
     if (currentPool.length === 0) {
-        alert("هیچ عنصری در محدوده انتخابی شما پیدا نشد. لطفاً محدوده بزرگتری انتخاب کنید.");
+        alert("هیچ عنصری در محدوده انتخابی شما پیدا نشد.");
         isGameActive = false;
         return;
     }
@@ -682,6 +725,7 @@ function initGame() {
     createGrid(true);
     
     startPanel.classList.add('hidden');
+    document.getElementById('selection-instruction').classList.add('hidden');
     gameDashboard.classList.remove('hidden');
     gameDashboard.classList.add('flex');
     modal.classList.add('hidden');
