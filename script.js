@@ -226,22 +226,53 @@ async function saveScoreToDB(name, score) {
     const listEl = document.getElementById('leaderboard-list');
     listEl.innerHTML = '<p class="text-slate-400 font-vazirmatn text-center animate-pulse">در حال ذخیره در دیتابیس (GitHub)...</p>';
     
+    // Save locally first to show immediately and avoid Github slowness blocker
+    let localLeaderboard = [];
+    try {
+        const stored = localStorage.getItem('local_leaderboard');
+        if (stored) localLeaderboard = JSON.parse(stored);
+    } catch(e) {}
+    
+    // Upsert or insert (only keep player's highest score)
+    const existingIndex = localLeaderboard.findIndex(entry => entry.name.toLowerCase() === name.toLowerCase());
+    if (existingIndex !== -1) {
+        if (score > localLeaderboard[existingIndex].score) {
+            localLeaderboard[existingIndex].score = score;
+            localLeaderboard[existingIndex].date = new Date().toLocaleDateString('fa-IR');
+        }
+    } else {
+        localLeaderboard.push({ name, score, date: new Date().toLocaleDateString('fa-IR') });
+    }
+    localLeaderboard.sort((a, b) => b.score - a.score);
+    localStorage.setItem('local_leaderboard', JSON.stringify(localLeaderboard));
+
+    // Render leaderboard immediately using the fast local cache
+    renderLeaderboard();
+    
     try {
         // 1. Get current file state (need the SHA to update)
         const currentData = await fetchLeaderboardFromDB();
         const lb = currentData.data || [];
         const sha = currentData.sha;
         
-        // 2. Add new score and sort
-        lb.push({ name, score, date: new Date().toLocaleDateString('fa-IR') });
+        // 2. Add new score or update existing (keep highest only)
+        const dbIndex = lb.findIndex(entry => entry.name.toLowerCase() === name.toLowerCase());
+        if (dbIndex !== -1) {
+            if (score > lb[dbIndex].score) {
+                lb[dbIndex].score = score;
+                lb[dbIndex].date = new Date().toLocaleDateString('fa-IR');
+            }
+        } else {
+            lb.push({ name, score, date: new Date().toLocaleDateString('fa-IR') });
+        }
         lb.sort((a, b) => b.score - a.score);
         const top10 = lb.slice(0, 10);
         
         // 3. Prepare payload for GitHub
         const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(top10))));
         
-        // 4. Update the file
-        await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`, {
+        // 4. Update the file asynchronously
+        fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `token ${_T}`,
@@ -253,37 +284,67 @@ async function saveScoreToDB(name, score) {
                 content: newContent,
                 sha: sha
             })
-        });
-        
-        renderLeaderboard();
+        }).then(async (res) => {
+            if (res.ok) {
+                // Keep local cache synced
+                const latestRes = await res.json();
+                try {
+                    // Update local storage with what actually is on Github if successful
+                    localStorage.setItem('local_leaderboard', JSON.stringify(top10));
+                } catch(e) {}
+                renderLeaderboard(); // refresh display with final verified db state
+            }
+        }).catch(e => console.error("Async save failed:", e));
         
     } catch (e) {
         console.error("Error saving score:", e);
-        listEl.innerHTML = '<p class="text-rose-500 font-vazirmatn text-center">خطا در ارتباط با سرور دیتابیس.</p>';
     }
 }
 
 async function renderLeaderboard() {
     const list = document.getElementById('leaderboard-list');
-    list.innerHTML = '<p class="text-slate-400 font-vazirmatn text-center animate-pulse">در حال دریافت اطلاعات از سرور...</p>';
     
-    const dbRes = await fetchLeaderboardFromDB();
-    const lb = dbRes.data;
-    
-    if (!lb || lb.length === 0) {
-        list.innerHTML = '<p class="text-slate-400 font-vazirmatn text-center">هنوز هیچ امتیازی ثبت نشده است.</p>';
-        return;
+    // Check if we have local cache first to render instantly
+    let localLeaderboard = [];
+    try {
+        const stored = localStorage.getItem('local_leaderboard');
+        if (stored) localLeaderboard = JSON.parse(stored);
+    } catch(e) {}
+
+    if (localLeaderboard && localLeaderboard.length > 0) {
+        displayLeaderboardList(localLeaderboard);
+    } else {
+        list.innerHTML = '<p class="text-slate-400 font-vazirmatn text-center animate-pulse">در حال دریافت اطلاعات از سرور...</p>';
     }
     
+    // Fetch from GitHub DB in background to update cache & UI
+    fetchLeaderboardFromDB().then(dbRes => {
+        const lb = dbRes.data;
+        if (lb && lb.length > 0) {
+            localStorage.setItem('local_leaderboard', JSON.stringify(lb));
+            displayLeaderboardList(lb);
+        } else if (!localLeaderboard || localLeaderboard.length === 0) {
+            list.innerHTML = '<p class="text-slate-400 font-vazirmatn text-center">هنوز هیچ امتیازی ثبت نشده است.</p>';
+        }
+    }).catch(e => {
+        console.error("Leaderboard background fetch error:", e);
+        if (!localLeaderboard || localLeaderboard.length === 0) {
+            list.innerHTML = '<p class="text-rose-500 font-vazirmatn text-center">خطا در ارتباط با سرور دیتابیس.</p>';
+        }
+    });
+}
+
+function displayLeaderboardList(lb) {
+    const list = document.getElementById('leaderboard-list');
     list.innerHTML = lb.map((entry, index) => `
-        <div class="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg border border-slate-600 transform transition-all hover:scale-105">
+        <div class="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg border border-slate-600 transform transition-all hover:scale-[1.02] min-w-[280px]">
             <div class="flex items-center gap-3">
                 <span class="text-xl font-bold ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-slate-300' : index === 2 ? 'text-amber-600' : 'text-slate-500'}">#${index+1}</span>
-                <span class="font-vazirmatn text-white font-bold">${entry.name}</span>
+                <span class="font-vazirmatn text-white font-bold max-w-[120px] md:max-w-[200px] truncate block">${entry.name}</span>
             </div>
-            <div class="text-right">
-                <span class="text-cyan-400 font-bold block">${entry.score} pts</span>
-                <span class="text-xs text-slate-400 font-vazirmatn">${entry.date}</span>
+            <div class="text-right flex items-center gap-4">
+                <span class="text-cyan-400 font-bold whitespace-nowrap">${entry.score} pts</span>
+                <span class="text-xs text-slate-400 font-vazirmatn whitespace-nowrap">${entry.date}</span>
             </div>
         </div>
     `).join('');
@@ -522,11 +583,26 @@ function createGrid(activeGame = false) {
         tableEl.classList.remove('explore-mode');
     }
     
+    // Get filter values if active game
+    let activePeriodFilters = [];
+    let activeCategoryFilters = [];
+    if (activeGame) {
+        document.querySelectorAll('input[name="period-filter"]:checked').forEach(cb => {
+            activePeriodFilters.push(parseInt(cb.value));
+        });
+        document.querySelectorAll('input[name="category-filter"]:checked').forEach(cb => {
+            cb.value.split(',').forEach(v => activeCategoryFilters.push(v.trim()));
+        });
+    }
+
     elementData.forEach(el => {
         const cell = document.createElement('div');
         // Base classes
         cell.className = `element font-english period-${el.p} group-${el.g}`;
         
+        // Check if this element fits current quiz query filters
+        const matchesFilters = !activeGame || (activePeriodFilters.includes(el.p) && activeCategoryFilters.includes(el.cat));
+
         if (!activeGame) {
             // Interactive Explore Mode
             cell.classList.add(`cat-${el.cat}`);
@@ -537,7 +613,7 @@ function createGrid(activeGame = false) {
                 <span class="name font-vazirmatn" style="direction: ltr;">${el.name}</span>
             `;
         }
-        else if (el.isMainBlock && activeGame) {
+        else if (matchesFilters) {
             // These are the puzzle targets
             cell.classList.add('puzzle-target');
             cell.dataset.atomic = el.num;
@@ -552,7 +628,7 @@ function createGrid(activeGame = false) {
             // Store color class to add later when correctly guessed
             cell.dataset.colorClass = `cat-${el.cat}`;
         } else {
-            // Pre-filled items (Transition metals, Period 6 right side, or inactive state)
+            // Pre-filled items (does not match current quiz filter or not in main block)
             cell.classList.add(`cat-${el.cat}`);
             if (activeGame) {
                 cell.classList.add('pre-filled');
@@ -574,15 +650,33 @@ function initGame() {
     const selectedMode = document.querySelector('input[name="mode"]:checked').value;
     gameMode = selectedMode;
     
+    // Get period and category filters
+    const activePeriodFilters = Array.from(document.querySelectorAll('input[name="period-filter"]:checked')).map(cb => parseInt(cb.value));
+    const activeCategoryFilters = [];
+    document.querySelectorAll('input[name="category-filter"]:checked').forEach(cb => {
+        cb.value.split(',').forEach(v => activeCategoryFilters.push(v.trim()));
+    });
+
+    if (activePeriodFilters.length === 0 || activeCategoryFilters.length === 0) {
+        alert("لطفاً حداقل یک دوره و یک بخش را برای آزمون انتخاب کنید.");
+        return;
+    }
+
     // Reset state
     score = 0;
     lives = 3;
     timeElapsed = 0;
     isGameActive = true;
     
-    // Get only main block elements (groups 1,2, 13-18 up to period 5) for the puzzle
-    currentPool = elementData.filter(e => e.isMainBlock).sort(() => Math.random() - 0.5);
+    // Filter element pool matching selected periods and categories
+    currentPool = elementData.filter(e => activePeriodFilters.includes(e.p) && activeCategoryFilters.includes(e.cat)).sort(() => Math.random() - 0.5);
     
+    if (currentPool.length === 0) {
+        alert("هیچ عنصری در محدوده انتخابی شما پیدا نشد. لطفاً محدوده بزرگتری انتخاب کنید.");
+        isGameActive = false;
+        return;
+    }
+
     // Update UI
     updateStats();
     createGrid(true);
