@@ -902,20 +902,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Theme toggler setup
-    const storedTheme = localStorage.getItem('periodic-puzzle-theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', storedTheme);
-    const themeBtn = document.getElementById('theme-toggle-btn');
-    if (themeBtn) {
-        themeBtn.textContent = storedTheme === 'dark' ? '☀️' : '🌙';
-        themeBtn.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('periodic-puzzle-theme', newTheme);
-            themeBtn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-        });
-    }
+    // Reset default dark theme settings and ensure document attribute is set
+    document.documentElement.setAttribute('data-theme', 'dark');
 });
 
 function createGrid(activeGame = false) {

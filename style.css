@@ -178,160 +178,14 @@
     --c-unknown: #475569;
 }
 
-[data-theme="light"] {
-    --bg-main: #f8fafc;
-    --bg-card: #ffffff;
-    --border-color: #e2e8f0;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-target-box: #0f172a;
-    --modal-bg: #ffffff;
-    --btn-secondary: #f1f5f9;
-    --btn-secondary-hover: #e2e8f0;
-    --leaderboard-card: #f1f5f9;
-
-    --c-alkali: #ff2a6d;
-    --c-alkaline-earth: #ffc857;
-    --c-transition: #05d9e8;
-    --c-post-transition: #005678;
-    --c-metalloid: #22d3ee;
-    --c-nonmetal: #a855f7;
-    --c-halogen: #d90368;
-    --c-noble: #00ff9f;
-    --c-unknown: #475569;
-}
-
 body {
     font-family: 'Vazirmatn', sans-serif;
     background-color: var(--bg-main) !important;
     color: var(--text-primary) !important;
-    transition: background-color 0.3s, color 0.3s;
 }
 
-/* Light Theme overrides for styling components */
-body.light-theme {
-    /* helper class alternative */
-}
 .font-english {
     font-family: 'Vazirmatn', sans-serif;
-}
-
-
-
-/* Light Theme Specific Utilities */
-[data-theme="light"] .bg-slate-800 {
-    background-color: var(--bg-card) !important;
-}
-[data-theme="light"] .bg-slate-900 {
-    background-color: var(--bg-main) !important;
-}
-[data-theme="light"] .border-slate-700,
-[data-theme="light"] .border-slate-600 {
-    border-color: var(--border-color) !important;
-}
-[data-theme="light"] .text-white {
-    color: var(--text-primary) !important;
-}
-[data-theme="light"] .text-slate-100 {
-    color: var(--text-primary) !important;
-}
-[data-theme="light"] .text-slate-300 {
-    color: var(--text-secondary) !important;
-}
-[data-theme="light"] .text-slate-400 {
-    color: var(--text-secondary) !important;
-}
-[data-theme="light"] .bg-slate-800\/80 {
-    background-color: rgba(255, 255, 255, 0.8) !important;
-}
-[data-theme="light"] #welcome-modal {
-    background-color: var(--bg-main) !important;
-}
-[data-theme="light"] #welcome-modal > div {
-    background-color: var(--bg-card) !important;
-    border-color: #0ea5e9 !important;
-    color: var(--text-primary) !important;
-}
-[data-theme="light"] #welcome-modal input {
-    background-color: var(--bg-main) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--border-color) !important;
-}
-[data-theme="light"] #welcome-modal input::placeholder {
-    color: var(--text-secondary) !important;
-}
-[data-theme="light"] .target-element-card {
-    background-color: #0ea5e9 !important;
-    color: white !important; /* Keep target symbol white for contrast */
-}
-[data-theme="light"] .element.puzzle-target {
-    background-color: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-}
-[data-theme="light"] .element.puzzle-target:hover {
-    border-color: #0ea5e9 !important;
-    background-color: #e2e8f0 !important;
-}
-[data-theme="light"] .element.pre-filled {
-    opacity: 0.3;
-}
-[data-theme="light"] #element-modal > div {
-    background-color: var(--bg-card) !important;
-    border-color: var(--border-color) !important;
-}
-[data-theme="light"] #element-modal #info-name {
-    color: var(--text-primary) !important;
-}
-[data-theme="light"] #element-modal #info-desc {
-    background-color: var(--bg-main) !important;
-    color: var(--text-secondary) !important;
-}
-[data-theme="light"] #element-modal .fact-carousel {
-    background-color: var(--bg-card) !important;
-    border: 1px solid var(--border-color);
-}
-[data-theme="light"] #leaderboard-modal > div {
-    background-color: var(--bg-card) !important;
-    border-color: #eab308 !important;
-}
-[data-theme="light"] #leaderboard-modal #leaderboard-list > div {
-    background-color: var(--leaderboard-card) !important;
-    border-color: var(--border-color) !important;
-}
-[data-theme="light"] #leaderboard-modal #leaderboard-list > div span.text-white {
-    color: var(--text-primary) !important;
-}
-[data-theme="light"] #start-panel {
-    background-color: var(--bg-card) !important;
-    border-color: var(--border-color) !important;
-}
-[data-theme="light"] #selection-instruction {
-    background-color: var(--bg-card) !important;
-    border-color: var(--border-color) !important;
-}
-[data-theme="light"] #selection-instruction p {
-    color: #0ea5e9 !important;
-}
-[data-theme="light"] .col-selector-btn,
-[data-theme="light"] .row-selector-btn {
-    background-color: var(--bg-card) !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-secondary) !important;
-}
-[data-theme="light"] .col-selector-btn:hover {
-    background-color: #0ea5e9 !important;
-    color: white !important;
-    border-color: #38bdf8 !important;
-}
-[data-theme="light"] .row-selector-btn:hover {
-    background-color: #a855f7 !important;
-    color: white !important;
-    border-color: #c084fc !important;
-}
-[data-theme="light"] #theme-toggle-btn {
-    background-color: var(--bg-card) !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-primary) !important;
 }
 
 /* Base element styles matching the prozhenegar theme */
@@ -348,10 +202,6 @@ body.light-theme {
     cursor: default;
     background-color: var(--c-unknown);
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
-}
-
-[data-theme="light"] .element {
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
 }
 
 .element .number {
@@ -581,11 +431,6 @@ body.light-theme {
     background: #a855f7;
     color: white;
     border-color: #c084fc;
-}
-
-[data-theme="light"] .col-selector-btn.selected,
-[data-theme="light"] .row-selector-btn.selected {
-    color: white !important;
 }
 
 /* Spacer block */
