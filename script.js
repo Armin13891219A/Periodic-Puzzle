@@ -610,17 +610,12 @@ window.selectRowOrColumn = function(type, index) {
     if (!isSelectionMode) return;
     
     // In elementData:
-    // Period 9 represents Lanthanides (displayed in row 9)
-    // Period 10 represents Actinides (displayed in row 10)
+    // Period 9 represents Lanthanides
+    // Period 10 represents Actinides
+    // R1-R7 represent periods 1-7
     let targetP = [];
     if (type === 'row') {
-        if (index === 6) {
-            targetP = [9]; // Lanthanides
-        } else if (index === 7) {
-            targetP = [10]; // Actinides
-        } else {
-            targetP = [index];
-        }
+        targetP = [index];
     }
 
     // Determine if we should select or deselect.
@@ -762,7 +757,7 @@ function createGrid(activeGame = false) {
         lanthBtn.textContent = 'La';
         lanthBtn.title = 'انتخاب لانتانیدها';
         lanthBtn.addEventListener('click', () => {
-            selectRowOrColumn('row', 6);
+            selectRowOrColumn('row', 9); // Use period index 9
         });
         tableEl.appendChild(lanthBtn);
 
@@ -773,7 +768,7 @@ function createGrid(activeGame = false) {
         actBtn.textContent = 'Ac';
         actBtn.title = 'انتخاب اکتینیدها';
         actBtn.addEventListener('click', () => {
-            selectRowOrColumn('row', 7);
+            selectRowOrColumn('row', 10); // Use period index 10
         });
         tableEl.appendChild(actBtn);
     }
