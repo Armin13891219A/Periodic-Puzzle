@@ -1,4 +1,3 @@
-
 /* Responsive Table Wrapper */
 .table-wrapper {
     width: 100%;
@@ -14,59 +13,16 @@
     height: 10px;
 }
 .table-wrapper::-webkit-scrollbar-track {
-    background: #1e293b;
-    border-radius: 5px;
-    margin: 0 10px;
+    background: #0b1329;
+    border-radius: 8px;
 }
 .table-wrapper::-webkit-scrollbar-thumb {
-    background: #0ea5e9;
-    border-radius: 5px;
+    background: linear-gradient(90deg, #0ea5e9, #a855f7);
+    border: 2.5px solid #0b1329;
+    border-radius: 8px;
 }
-
-/* The Grid itself */
-.periodic-grid {
-    display: grid;
-    /* On normal state: 18 columns. On selection mode: 19 columns (1 spacer + 18 cols) */
-    grid-template-columns: repeat(18, 1fr);
-    gap: 0.25rem;
-    padding: 0.5rem;
-    min-width: 1050px; 
-    margin: 0 auto;
-}
-.periodic-grid.selection-mode {
-    grid-template-columns: minmax(25px, 35px) repeat(18, 1fr);
-    min-width: 1100px;
-}
-
-/* Ensure elements scale nicely within their fixed-width grid cells */
-.element {
-    aspect-ratio: 1; /* Keep them square */
-    padding: 0.25rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    overflow: hidden; /* Prevent content from breaking the box */
-}
-
-.element .number {
-    font-size: 0.7rem;
-    line-height: 1;
-}
-
-.element .symbol {
-    font-size: 1.3rem;
-    line-height: 1;
-    margin: auto 0;
-    text-align: center;
-}
-
-.element .name {
-    font-size: 0.55rem;
-    line-height: 1.2;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; /* Long names like پرازئودیمیم will get ... */
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #38bdf8, #c084fc);
 }
 
 /* Global Scrollbar Customization */
@@ -75,34 +31,17 @@
     height: 10px;
 }
 ::-webkit-scrollbar-track {
-    background: var(--bg-main);
+    background: #0b1329;
     border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, #0ea5e9, #a855f7);
-    border: 2.5px solid var(--bg-main);
+    border: 2.5px solid #0b1329;
     border-radius: 8px;
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
 }
 ::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(180deg, #38bdf8, #c084fc);
-}
-
-/* Scrollbar styling for table-wrapper specifically */
-.table-wrapper::-webkit-scrollbar {
-    height: 10px;
-}
-.table-wrapper::-webkit-scrollbar-track {
-    background: var(--bg-main);
-    border-radius: 8px;
-}
-.table-wrapper::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, #0ea5e9, #a855f7);
-    border: 2.5px solid var(--bg-main);
-    border-radius: 8px;
-}
-.table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #38bdf8, #c084fc);
 }
 
 /* Modals scrolling on small screens */
@@ -123,8 +62,6 @@
 @media (min-width: 640px) {
     #bohr-model { max-width: 256px; }
 }
-
-
 
 /* Responsive Periodic Grid Base */
 .periodic-grid {
@@ -156,17 +93,6 @@
 /* CSS based on the requested target site's design */
 
 :root {
-    --bg-main: #0f172a;
-    --bg-card: #1e293b;
-    --border-color: #334155;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-target-box: #ffffff;
-    --modal-bg: #1e293b;
-    --btn-secondary: #334155;
-    --btn-secondary-hover: #475569;
-    --leaderboard-card: #0f172a;
-
     --c-alkali: #ff2a6d;
     --c-alkaline-earth: #ffc857;
     --c-transition: #05d9e8;
@@ -180,12 +106,9 @@
 
 body {
     font-family: 'Vazirmatn', sans-serif;
-    background-color: var(--bg-main) !important;
-    color: var(--text-primary) !important;
 }
-
 .font-english {
-    font-family: 'Vazirmatn', sans-serif;
+    font-family: 'Vazirmatn', sans-serif; /* Update Outfit to Vazirmatn globally as requested */
 }
 
 /* Base element styles matching the prozhenegar theme */
@@ -198,7 +121,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #ffffff; /* Always keep element text visible */
+    color: white;
     cursor: default;
     background-color: var(--c-unknown);
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
@@ -230,29 +153,29 @@ body {
 }
 
 /* Colors for Lantanides and Actinides */
-.cat-lanthanide { background-color: #bd00ff; color: #ffffff; }
-.cat-actinide { background-color: #ff8e00; color: #ffffff; }
-.cat-alkali { background-color: var(--c-alkali); color: #ffffff; }
-.cat-alkaline-earth { background-color: var(--c-alkaline-earth); color: #ffffff; }
-.cat-transition { background-color: var(--c-transition); color: #ffffff; }
-.cat-post-transition { background-color: var(--c-post-transition); color: #ffffff; }
-.cat-metalloid { background-color: var(--c-metalloid); color: #ffffff; }
-.cat-nonmetal { background-color: var(--c-nonmetal); color: #ffffff; }
-.cat-halogen { background-color: var(--c-halogen); color: #ffffff; }
-.cat-noble { background-color: var(--c-noble); color: #ffffff; }
-.cat-unknown { background-color: var(--c-unknown); color: #ffffff; }
+.cat-lanthanide { background-color: #bd00ff; color: white; }
+.cat-actinide { background-color: #ff8e00; color: #1e293b; }
+.cat-alkali { background-color: var(--c-alkali); }
+.cat-alkaline-earth { background-color: var(--c-alkaline-earth); color: #1e293b; }
+.cat-transition { background-color: var(--c-transition); color: #1e293b; }
+.cat-post-transition { background-color: var(--c-post-transition); }
+.cat-metalloid { background-color: var(--c-metalloid); color: #1e293b; }
+.cat-nonmetal { background-color: var(--c-nonmetal); }
+.cat-halogen { background-color: var(--c-halogen); }
+.cat-noble { background-color: var(--c-noble); color: #1e293b; }
+.cat-unknown { background-color: var(--c-unknown); }
 
 /* Puzzle Specific Styles */
 .element.puzzle-target {
-    background-color: var(--bg-card);
-    border: 2px dashed var(--border-color);
+    background-color: #1e293b;
+    border: 2px dashed #475569;
     cursor: pointer;
     box-shadow: none;
     color: transparent;
 }
 .element.puzzle-target:hover {
     border-color: #0ea5e9;
-    background-color: var(--btn-secondary-hover);
+    background-color: #334155;
     transform: scale(1.05);
     z-index: 10;
 }
