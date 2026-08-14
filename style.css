@@ -179,26 +179,26 @@
 }
 
 [data-theme="light"] {
-    --bg-main: #f1f5f9;
+    --bg-main: #f8fafc;
     --bg-card: #ffffff;
-    --border-color: #cbd5e1;
+    --border-color: #e2e8f0;
     --text-primary: #0f172a;
     --text-secondary: #475569;
     --text-target-box: #0f172a;
     --modal-bg: #ffffff;
-    --btn-secondary: #e2e8f0;
-    --btn-secondary-hover: #cbd5e1;
-    --leaderboard-card: #f8fafc;
+    --btn-secondary: #f1f5f9;
+    --btn-secondary-hover: #e2e8f0;
+    --leaderboard-card: #f1f5f9;
 
-    --c-alkali: #e11d48;
-    --c-alkaline-earth: #d97706;
-    --c-transition: #0891b2;
-    --c-post-transition: #1e40af;
-    --c-metalloid: #0f766e;
-    --c-nonmetal: #7c3aed;
-    --c-halogen: #db2777;
-    --c-noble: #16a34a;
-    --c-unknown: #64748b;
+    --c-alkali: #ff2a6d;
+    --c-alkaline-earth: #ffc857;
+    --c-transition: #05d9e8;
+    --c-post-transition: #005678;
+    --c-metalloid: #22d3ee;
+    --c-nonmetal: #a855f7;
+    --c-halogen: #d90368;
+    --c-noble: #00ff9f;
+    --c-unknown: #475569;
 }
 
 body {
@@ -265,8 +265,12 @@ body.light-theme {
     color: white !important; /* Keep target symbol white for contrast */
 }
 [data-theme="light"] .element.puzzle-target {
-    background-color: var(--bg-main) !important;
-    border-color: var(--border-color) !important;
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+[data-theme="light"] .element.puzzle-target:hover {
+    border-color: #0ea5e9 !important;
+    background-color: #e2e8f0 !important;
 }
 [data-theme="light"] .element.pre-filled {
     opacity: 0.3;
@@ -312,6 +316,7 @@ body.light-theme {
 [data-theme="light"] .row-selector-btn {
     background-color: var(--bg-card) !important;
     border-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
 }
 [data-theme="light"] .col-selector-btn:hover {
     background-color: #0ea5e9 !important;
@@ -375,29 +380,29 @@ body.light-theme {
 }
 
 /* Colors for Lantanides and Actinides */
-.cat-lanthanide { background-color: #bd00ff; color: white; }
-.cat-actinide { background-color: #ff8e00; color: #1e293b; }
-.cat-alkali { background-color: var(--c-alkali); }
-.cat-alkaline-earth { background-color: var(--c-alkaline-earth); color: #1e293b; }
-.cat-transition { background-color: var(--c-transition); color: #1e293b; }
-.cat-post-transition { background-color: var(--c-post-transition); }
-.cat-metalloid { background-color: var(--c-metalloid); color: #1e293b; }
-.cat-nonmetal { background-color: var(--c-nonmetal); }
-.cat-halogen { background-color: var(--c-halogen); }
-.cat-noble { background-color: var(--c-noble); color: #1e293b; }
-.cat-unknown { background-color: var(--c-unknown); }
+.cat-lanthanide { background-color: #bd00ff; color: #ffffff; }
+.cat-actinide { background-color: #ff8e00; color: #ffffff; }
+.cat-alkali { background-color: var(--c-alkali); color: #ffffff; }
+.cat-alkaline-earth { background-color: var(--c-alkaline-earth); color: #ffffff; }
+.cat-transition { background-color: var(--c-transition); color: #ffffff; }
+.cat-post-transition { background-color: var(--c-post-transition); color: #ffffff; }
+.cat-metalloid { background-color: var(--c-metalloid); color: #ffffff; }
+.cat-nonmetal { background-color: var(--c-nonmetal); color: #ffffff; }
+.cat-halogen { background-color: var(--c-halogen); color: #ffffff; }
+.cat-noble { background-color: var(--c-noble); color: #ffffff; }
+.cat-unknown { background-color: var(--c-unknown); color: #ffffff; }
 
 /* Puzzle Specific Styles */
 .element.puzzle-target {
-    background-color: #1e293b;
-    border: 2px dashed #475569;
+    background-color: var(--bg-card);
+    border: 2px dashed var(--border-color);
     cursor: pointer;
     box-shadow: none;
     color: transparent;
 }
 .element.puzzle-target:hover {
     border-color: #0ea5e9;
-    background-color: #334155;
+    background-color: var(--btn-secondary-hover);
     transform: scale(1.05);
     z-index: 10;
 }
@@ -576,6 +581,11 @@ body.light-theme {
     background: #a855f7;
     color: white;
     border-color: #c084fc;
+}
+
+[data-theme="light"] .col-selector-btn.selected,
+[data-theme="light"] .row-selector-btn.selected {
+    color: white !important;
 }
 
 /* Spacer block */
