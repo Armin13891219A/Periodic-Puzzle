@@ -736,6 +736,126 @@ body {
     75% { transform: rotate(-5deg); }
 }
 
+/* ============================================================
+   STORY TEACH EFFECTS — locate, bootcamp, extra juice ✨
+   ============================================================ */
+.teach-locate-btn {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid #38bdf8;
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.35rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+.teach-locate-btn:hover {
+    background: #38bdf8;
+    transform: scale(1.15) rotate(-8deg);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
+}
+.element.teach-locate {
+    animation: teach-spotlight 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275) both !important;
+    z-index: 5;
+    position: relative;
+}
+@keyframes teach-spotlight {
+    0% { transform: scale(0.3) rotate(-180deg); opacity: 0; box-shadow: none; }
+    55% { transform: scale(1.65) rotate(8deg); opacity: 1; box-shadow: 0 0 34px 12px rgba(94, 234, 212, 0.85); filter: brightness(1.6); }
+    100% { transform: scale(1.28); opacity: 1; box-shadow: 0 0 20px 6px rgba(94, 234, 212, 0.6); }
+}
+.locate-marker {
+    position: fixed;
+    z-index: 90;
+    background: #0f172a;
+    border: 2px solid #5eead4;
+    border-radius: 0.9rem;
+    padding: 0.55rem 0.95rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    pointer-events: auto;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 18px rgba(94, 234, 212, 0.35);
+    animation: marker-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.4) both;
+    white-space: nowrap;
+}
+@keyframes marker-in {
+    from { opacity: 0; transform: translateY(14px) scale(0.85); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.bootcamp-dim {
+    opacity: 0.13 !important;
+    filter: grayscale(0.9) blur(1px);
+    transition: all 0.5s ease;
+}
+#bootcamp-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 1rem;
+    pointer-events: none;
+    animation: teach-in 0.4s ease both;
+}
+.bootcamp-title {
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92));
+    border: 1.5px solid #5eead4;
+    color: #5eead4;
+    font-weight: 900;
+    font-size: 1.05rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 999px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 26px rgba(94, 234, 212, 0.3);
+    animation: bootcamp-pulse 1.6s ease-in-out infinite;
+}
+@keyframes bootcamp-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 26px rgba(94,234,212,.3); }
+    50% { transform: scale(1.06); box-shadow: 0 12px 44px rgba(0,0,0,.6), 0 0 40px rgba(94,234,212,.55); }
+}
+.bootcamp-skip {
+    pointer-events: auto;
+    margin-right: 0.8rem;
+    align-self: center;
+    background: rgba(51, 65, 85, 0.92);
+    border: 1px solid #64748b;
+    color: #e2e8f0;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.45rem 0.95rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+.bootcamp-skip:hover {
+    background: #334155;
+    border-color: #94a3b8;
+    transform: translateY(-2px);
+}
+
+/* 💥 screen shake on wrong answer */
+.screen-shake {
+    animation: screen-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes screen-shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 1px, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, -1px, 0); }
+    40%, 60% { transform: translate3d(4px, 1px, 0); }
+}
+/* ❤️ heart pop when losing a life */
+#lives.heart-hit {
+    animation: heart-pop 0.5s ease;
+}
+@keyframes heart-pop {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.5) rotate(-8deg); filter: drop-shadow(0 0 8px rgba(255, 42, 109, 0.9)); }
+    100% { transform: scale(1); }
+}
+
 /* End-game stat chips */
 .stat-chips {
     display: flex;

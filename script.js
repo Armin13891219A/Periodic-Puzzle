@@ -769,6 +769,18 @@ const SFX = {
     levelUp() {
         [523, 659, 784, 1047].forEach((f, i) => playTone(f, 0.18, 'sine', 0.15, i * 0.12));
     },
+    // 🎓 bootcamp step note (rising pitch per element)
+    teachStep(i) { playTone(440 * Math.pow(1.12, i), 0.12, 'triangle', 0.1); },
+    // 📍 locate ping
+    locate() { playTone(988, 0.08, 'sine', 0.09); playTone(1319, 0.14, 'sine', 0.08, 0.07); },
+    // ⏱ challenge countdown last 3 seconds
+    urgentTick() { playTone(1568, 0.05, 'square', 0.07); },
+    // ❤️ losing a life — dramatic
+    lifeLost() {
+        playTone(220, 0.15, 'square', 0.1);
+        playTone(165, 0.2, 'sawtooth', 0.09, 0.13);
+        playTone(110, 0.3, 'sawtooth', 0.08, 0.28);
+    },
     gameOver() {
         [392, 330, 262, 196].forEach((f, i) => playTone(f, 0.25, 'sawtooth', 0.1, i * 0.18));
     },
@@ -818,7 +830,14 @@ function registerWrongAnswer(cell) {
     score = Math.max(0, score - 5);
     if (cell) showScorePopup(cell, '-5', '#ff2a6d');
     SFX.wrong();
+    SFX.lifeLost();
     updateComboDisplay(false);
+    // 💥 screen shake — extra juice
+    const shakeTarget = document.body;
+    shakeTarget.classList.remove('screen-shake');
+    void shakeTarget.offsetWidth;
+    shakeTarget.classList.add('screen-shake');
+    setTimeout(() => shakeTarget.classList.remove('screen-shake'), 500);
 }
 
 function showCombo(multiplier) {
@@ -932,7 +951,7 @@ function startChallengeTimer() {
 
     challengeInterval = setInterval(() => {
         challengeTimeLeft--;
-        SFX.tick();
+        challengeTimeLeft <= 3 ? SFX.urgentTick() : SFX.tick();
         renderChallengeBar();
         if (challengeTimeLeft <= 0) handleChallengeTimeout();
     }, 1000);
@@ -1558,17 +1577,72 @@ window.startStoryLevel = function(regionId, levelId) {
     showLevelIntro(region, level);
 };
 
+/* 📍 نمایش جای عنصر روی جدول واقعی (از داخل مودال آموزش) */
+let locateTimer = null;
+window.locateTeachElement = function(num) {
+    const el = elementData.find(e => e.num === num);
+    if (!el) return;
+    SFX.locate();
+
+    // hide intro modal so the table is fully visible
+    document.getElementById('level-intro-modal').classList.add('hidden');
+
+    // make sure the table is rendered (display mode) and scrolled into view
+    if (!tableEl.children.length) createGrid(false);
+    document.getElementById('periodic-table').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // clear previous locate effects
+    tableEl.querySelectorAll('.teach-locate').forEach(c => c.classList.remove('teach-locate'));
+    const markerBox = document.getElementById('locate-marker-box');
+    if (markerBox) markerBox.remove();
+
+    const cell = tableEl.querySelector(`.element[data-atomic-num="${num}"]`);
+    if (!cell) return;
+
+    cell.classList.add('teach-locate');
+
+    // floating label above the element
+    const info = categoryInfo[el.cat] || {};
+    const marker = document.createElement('div');
+    marker.id = 'locate-marker-box';
+    marker.className = 'locate-marker';
+    marker.style.borderColor = info.color;
+    marker.innerHTML = `<b class="font-english" style="color:${info.color}">${el.sym}</b> ${el.name} — ردیف ${el.p > 8 ? (el.p === 9 ? 'لانتانید' : 'اکتینید') : el.p}، ستون ${el.g}`;
+    document.body.appendChild(marker);
+
+    // position the marker near the cell
+    const rect = cell.getBoundingClientRect();
+    marker.style.left = Math.max(8, Math.min(window.innerWidth - marker.offsetWidth - 8, rect.left + rect.width / 2 - marker.offsetWidth / 2)) + 'px';
+    marker.style.top = (rect.top - marker.offsetHeight - 10 < 8 ? rect.bottom + 10 : rect.top - marker.offsetHeight - 10) + 'px';
+
+    // auto-return to the intro modal after a few seconds
+    clearTimeout(locateTimer);
+    locateTimer = setTimeout(() => closeLocateView(), 4200);
+};
+
+function closeLocateView() {
+    clearTimeout(locateTimer);
+    tableEl.querySelectorAll('.teach-locate').forEach(c => c.classList.remove('teach-locate'));
+    const markerBox = document.getElementById('locate-marker-box');
+    if (markerBox) markerBox.remove();
+    const intro = document.getElementById('level-intro-modal');
+    if (intro.classList.contains('hidden')) intro.classList.remove('hidden');
+}
+window.closeLocateView = closeLocateView;
+
 function showLevelIntro(region, level) {
     SFX.click();
     const teachEls = (level.teachNums || []).map(n => elementData.find(e => e.num === n)).filter(Boolean);
 
-    const chips = teachEls.map(el => {
+    // chips now include a "📍 جای عنصر" button that shows its position on the real table
+    const chips = teachEls.map((el, i) => {
         const info = categoryInfo[el.cat] || {};
         return `
-            <span class="teach-element-chip cursor-pointer hover:border-cyan-400 transition-colors" onclick="openElementInfo(elementData.find(e=>e.num===${el.num}))">
+            <span class="teach-element-chip" style="animation-delay:${i * 0.12}s">
                 <b class="font-english text-xl" style="color:${info.color}">${el.sym}</b>
                 <span class="text-sm">${el.name}</span>
                 <span class="text-xs text-slate-500 font-english">#${el.num}</span>
+                <button class="teach-locate-btn" onclick="locateTeachElement(${el.num})" title="جای عنصر روی جدول">📍</button>
             </span>
         `;
     }).join('');
@@ -1624,6 +1698,71 @@ function beginStoryQuiz(region, level) {
     const quizNums = resolveQuizNums(level.quizNums);
     const pool = elementData.filter(e => quizNums.includes(e.num)).sort(() => Math.random() - 0.5);
     if (pool.length === 0) { alert('خطا در بارگذاری مرحله.'); return; }
+
+    // 🎓 Boot-camp: flash the positions of ALL taught-so-far elements on the table
+    const taughtNums = (level.teachNums || []);
+    if (taughtNums.length) {
+        runTeachBootCamp(taughtNums, () => launchStoryRun(region, level, pool));
+    } else {
+        launchStoryRun(region, level, pool);
+    }
+}
+
+/* افکت آموزشی: هر عنصر جدید یکی‌یکی روی جدول روشن می‌شه + صدای نت */
+function runTeachBootCamp(teachNums, done) {
+    // ensure display grid
+    createGrid(false);
+    startPanel.classList.add('hidden');
+    gameDashboard.classList.add('hidden');
+    gameDashboard.classList.remove('flex', 'story-active');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'bootcamp-overlay';
+    overlay.innerHTML = `
+        <div class="bootcamp-title">🎓 اول جای اینا رو حفظ کن...</div>
+        <button id="bootcamp-skip-btn" class="bootcamp-skip">رد شدن ⏭</button>
+    `;
+    document.body.appendChild(overlay);
+
+    let cancelled = false;
+    document.getElementById('bootcamp-skip-btn').onclick = () => { cancelled = true; finish(); };
+
+    function cleanupCells() {
+        tableEl.querySelectorAll('.teach-locate').forEach(c => c.classList.remove('teach-locate'));
+        tableEl.querySelectorAll('.bootcamp-dim').forEach(c => c.classList.remove('bootcamp-dim'));
+    }
+    function finish() {
+        overlay.remove();
+        cleanupCells();
+        if (!cancelled) SFX.click();
+        done();
+    }
+
+    // dim all cells first for dramatic spotlight effect
+    tableEl.querySelectorAll('.element').forEach(c => c.classList.add('bootcamp-dim'));
+
+    let i = 0;
+    const stepMs = 900;
+    function step() {
+        if (cancelled) return;
+        if (i >= teachNums.length) { setTimeout(finish, 700); return; }
+        const num = teachNums[i++];
+        const el = elementData.find(e => e.num === num);
+        const cell = tableEl.querySelector(`.element[data-atomic-num="${num}"]`);
+        if (cell && el) {
+            cell.classList.add('teach-locate');
+            cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            SFX.teachStep(i);
+        }
+        setTimeout(step, stepMs);
+    }
+    // small delay so layout settles before first highlight
+    setTimeout(step, 350);
+}
+
+function launchStoryRun(region, level, pool) {
+    const bootOverlay = document.getElementById('bootcamp-overlay');
+    if (bootOverlay) bootOverlay.remove();
 
     // Reset state for the story run
     score = 0;
@@ -1799,7 +1938,14 @@ function handleCellClick(cell, targetAtomic) {
 
 function updateStats() {
     scoreEl.textContent = score;
+    const prevLives = parseInt(livesEl.dataset.prev || '3');
     livesEl.textContent = '❤️'.repeat(lives) + '🤍'.repeat(3 - lives);
+    if (lives < prevLives) {
+        livesEl.classList.remove('heart-hit');
+        void livesEl.offsetWidth;
+        livesEl.classList.add('heart-hit');
+    }
+    livesEl.dataset.prev = lives;
 }
 
 function updateTimerDisplay() {
