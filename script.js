@@ -712,6 +712,269 @@ let gameMode = 'symbol'; // 'symbol' or 'name'
 let isGameActive = false;
 let playerName = "";
 
+/* ===== New feature state ===== */
+let comboCount = 0;              // Consecutive correct answers
+let challengeMode = false;       // Per-question countdown enabled?
+let challengeTimeLeft = 0;
+let challengeInterval = null;
+const CHALLENGE_SECONDS = 10;
+let stats = { correct: 0, wrong: 0, bestCombo: 0, hintsUsed: 0 }; // End-game stats
+let storySession = null;         // { regionId, levelId } while playing a story level
+
+/* ============================================================
+   SOUND ENGINE (Web Audio API — no audio files needed)
+   ============================================================ */
+let _audioCtx = null;
+let soundEnabled = localStorage.getItem('pp-sound') !== 'off';
+
+function getAudioCtx() {
+    if (!_audioCtx) {
+        try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    }
+    if (_audioCtx && _audioCtx.state === 'suspended') _audioCtx.resume();
+    return _audioCtx;
+}
+
+function playTone(freq, duration = 0.12, type = 'sine', volume = 0.18, when = 0) {
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, ctx.currentTime + when);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + when + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(ctx.currentTime + when);
+    osc.stop(ctx.currentTime + when + duration);
+}
+
+const SFX = {
+    correct() {
+        // Happy ascending arpeggio — pitch rises with combo!
+        const base = 523.25 * Math.pow(1.06, Math.min(comboCount, 10));
+        playTone(base, 0.1, 'sine', 0.16);
+        playTone(base * 1.25, 0.1, 'sine', 0.14, 0.08);
+        playTone(base * 1.5, 0.16, 'sine', 0.13, 0.16);
+    },
+    wrong() {
+        playTone(196, 0.18, 'sawtooth', 0.12);
+        playTone(147, 0.25, 'sawtooth', 0.11, 0.12);
+    },
+    click()   { playTone(880, 0.05, 'triangle', 0.08); },
+    hint()    { playTone(660, 0.09, 'triangle', 0.1); playTone(990, 0.12, 'triangle', 0.09, 0.09); },
+    tick()    { playTone(1200, 0.04, 'square', 0.05); },
+    timeout() { playTone(330, 0.2, 'sawtooth', 0.1); playTone(220, 0.3, 'sawtooth', 0.1, 0.15); },
+    levelUp() {
+        [523, 659, 784, 1047].forEach((f, i) => playTone(f, 0.18, 'sine', 0.15, i * 0.12));
+    },
+    gameOver() {
+        [392, 330, 262, 196].forEach((f, i) => playTone(f, 0.25, 'sawtooth', 0.1, i * 0.18));
+    },
+    victory() {
+        [523, 659, 784, 1047, 1319].forEach((f, i) => playTone(f, 0.22, 'sine', 0.15, i * 0.13));
+    }
+};
+
+// Sound toggle button
+document.addEventListener('DOMContentLoaded', () => {
+    const sndBtn = document.getElementById('sound-toggle-btn');
+    if (sndBtn) {
+        sndBtn.textContent = soundEnabled ? '🔊' : '🔇';
+        sndBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('pp-sound', soundEnabled ? 'on' : 'off');
+            sndBtn.textContent = soundEnabled ? '🔊' : '🔇';
+            if (soundEnabled) SFX.click();
+        });
+    }
+});
+
+/* ============================================================
+   COMBO SYSTEM
+   ============================================================ */
+function registerCorrectAnswer(cell) {
+    comboCount++;
+    stats.correct++;
+    stats.bestCombo = Math.max(stats.bestCombo, comboCount);
+
+    const multiplier = 1 + Math.floor(comboCount / 5); // ×1, ×2, ×3 ... every 5 in a row
+    const gained = 10 * multiplier;
+    score += gained;
+
+    showScorePopup(cell, `+${gained}`, '#00ff9f');
+    spawnBurst(cell);
+    SFX.correct();
+
+    if (comboCount >= 3) showCombo(multiplier);
+    updateStats();
+    return gained;
+}
+
+function registerWrongAnswer(cell) {
+    comboCount = 0;
+    stats.wrong++;
+    score = Math.max(0, score - 5);
+    if (cell) showScorePopup(cell, '-5', '#ff2a6d');
+    SFX.wrong();
+    updateComboDisplay(false);
+}
+
+function showCombo(multiplier) {
+    updateComboDisplay(true);
+    let el = document.getElementById('combo-indicator');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'combo-indicator';
+        el.className = 'combo-indicator';
+        el.innerHTML = `<div class="combo-text">🔥 <span id="combo-num"></span> زنجیره!</div><div class="combo-sub" id="combo-sub"></div>`;
+        document.body.appendChild(el);
+    }
+    document.getElementById('combo-num').textContent = comboCount;
+    document.getElementById('combo-sub').textContent = multiplier > 1 ? `امتیاز ×${multiplier} فعال شد!` : 'ادامه بده...';
+    el.classList.remove('visible');
+    void el.offsetWidth; // restart animation
+    el.classList.add('visible');
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(() => el.classList.remove('visible'), 1300);
+}
+
+function updateComboDisplay(active) {
+    const disp = document.getElementById('combo-display');
+    if (!disp) return;
+    if (active && comboCount >= 2) {
+        disp.textContent = `🔥×${comboCount}`;
+    } else {
+        disp.textContent = '';
+    }
+}
+
+/* ============================================================
+   VISUAL FX (popups / bursts / confetti)
+   ============================================================ */
+function showScorePopup(cell, text, color) {
+    if (!cell) return;
+    const rect = cell.getBoundingClientRect();
+    const pop = document.createElement('div');
+    pop.className = 'score-popup';
+    pop.textContent = text;
+    pop.style.color = color;
+    pop.style.left = `${rect.left + window.scrollX + rect.width / 2 - 14}px`;
+    pop.style.top = `${rect.top + window.scrollY - 6}px`;
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 900);
+}
+
+function spawnBurst(cell) {
+    if (!cell) return;
+    const b = document.createElement('div');
+    b.className = 'burst';
+    b.style.setProperty('--burst-color', cell.dataset.colorClass ? 'rgba(5,217,232,0.7)' : '#00ff9f');
+    cell.appendChild(b);
+    setTimeout(() => b.remove(), 550);
+}
+
+function launchConfetti(count = 120) {
+    const colors = ['#0ea5e9', '#a855f7', '#00ff9f', '#ffc857', '#ff2a6d', '#05d9e8'];
+    let container = document.querySelector('.confetti-container');
+    if (container) container.remove();
+    container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.animationDuration = (2.2 + Math.random() * 2) + 's';
+        p.style.animationDelay = Math.random() * 0.8 + 's';
+        p.style.width = (6 + Math.random() * 8) + 'px';
+        p.style.height = (10 + Math.random() * 8) + 'px';
+        container.appendChild(p);
+    }
+    setTimeout(() => container.remove(), 5500);
+}
+
+/* ============================================================
+   HINT SYSTEM (-5 points, flash target row/column green)
+   ============================================================ */
+function useHint() {
+    if (!isGameActive || !currentElement) return;
+    score = Math.max(0, score - 5);
+    stats.hintsUsed++;
+    updateStats();
+    SFX.hint();
+
+    const cells = tableEl.querySelectorAll('.puzzle-target');
+    cells.forEach(c => {
+        const el = elementData.find(e => e.num == c.dataset.atomic);
+        if (!el) return;
+        const matchRow = el.p === currentElement.p || (el.p === 9 && currentElement.p === 9) || (el.p === 10 && currentElement.p === 10);
+        const matchCol = el.g === currentElement.g;
+        if (matchRow || matchCol) {
+            c.classList.add('hint-pulse');
+            setTimeout(() => c.classList.remove('hint-pulse'), 2600);
+        }
+    });
+}
+
+/* ============================================================
+   CHALLENGE TIMER (per-question countdown)
+   ============================================================ */
+function startChallengeTimer() {
+    stopChallengeTimer();
+    if (!challengeMode || !isGameActive) return;
+
+    challengeTimeLeft = CHALLENGE_SECONDS;
+    renderChallengeBar();
+    document.getElementById('challenge-bar-container').classList.remove('hidden');
+
+    challengeInterval = setInterval(() => {
+        challengeTimeLeft--;
+        SFX.tick();
+        renderChallengeBar();
+        if (challengeTimeLeft <= 0) handleChallengeTimeout();
+    }, 1000);
+}
+
+function stopChallengeTimer() {
+    if (challengeInterval) { clearInterval(challengeInterval); challengeInterval = null; }
+    const c = document.getElementById('challenge-bar-container');
+    if (c) c.classList.add('hidden');
+}
+
+function renderChallengeBar() {
+    const bar = document.getElementById('challenge-bar');
+    if (!bar) return;
+    const pct = Math.max(0, (challengeTimeLeft / CHALLENGE_SECONDS) * 100);
+    bar.style.width = pct + '%';
+    bar.classList.toggle('warning', challengeTimeLeft <= 5 && challengeTimeLeft > 3);
+    bar.classList.toggle('danger', challengeTimeLeft <= 3);
+}
+
+function handleChallengeTimeout() {
+    stopChallengeTimer();
+    SFX.timeout();
+    registerWrongAnswer(null);
+
+    // Flash the correct answer so kids learn
+    const cell = tableEl.querySelector(`.puzzle-target[data-atomic="${currentElement.num}"]`);
+    if (cell) {
+        cell.classList.add('timeout-flash', 'hint-pulse');
+        setTimeout(() => cell.classList.remove('timeout-flash'), 500);
+        setTimeout(() => cell.classList.remove('hint-pulse'), 2400);
+    }
+
+    lives--;
+    updateStats();
+    if (lives <= 0) {
+        endGame(false);
+    } else {
+        nextElement();
+    }
+}
+
 // DOM Elements
 const tableEl = document.getElementById('periodic-table');
 
@@ -726,6 +989,27 @@ document.getElementById('leaderboard-modal').addEventListener('click', () => {
 });
 document.getElementById('element-modal').addEventListener('click', () => {
     document.getElementById('element-modal').classList.add('hidden');
+});
+
+// ===== Story map, heatmap, hint & quit wiring =====
+document.getElementById('story-map-btn').addEventListener('click', openStoryMap);
+document.getElementById('close-story-map-btn').addEventListener('click', () => {
+    SFX.click();
+    document.getElementById('story-map-modal').classList.add('hidden');
+});
+document.getElementById('heatmap-btn').addEventListener('click', toggleHeatmap);
+document.getElementById('hint-btn').addEventListener('click', useHint);
+document.getElementById('quit-game-btn').addEventListener('click', () => {
+    if (!isGameActive) return;
+    if (confirm('مطمئنی می‌خوای بازی رو تموم کنی؟ پیشرفت این دست ذخیره نمی‌شه.')) {
+        endGame(false);
+    }
+});
+// Close story map by clicking the backdrop
+document.getElementById('story-map-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'story-map-modal') {
+        document.getElementById('story-map-modal').classList.add('hidden');
+    }
 });
 
 function openElementInfo(elData) {
@@ -744,11 +1028,32 @@ function openElementInfo(elData) {
     const eShells = getElectronShells(elData.num);
     currentFacts = elementFacts[elData.num] || [];
     currentFactIndex = 0;
-    
+
+    // Enhanced properties grid
+    const mass = (elementProperties && elementProperties.mass[elData.num]) || '?';
+    const meltRaw = (elementProperties && elementProperties.melt[elData.num]);
+    const meltTxt = typeof meltRaw === 'number' ? `${meltRaw}°C` : '؟';
+    const groupFaName = (elementProperties && elementProperties.groupFa[elData.cat]) || info.name;
+
     document.getElementById('info-desc').innerHTML = `
         <div class="mb-3">
             <span class="text-slate-400">عدد اتمی:</span> <span class="font-english font-bold text-white text-lg">${elData.num}</span><br>
             <span class="text-slate-400">الکترون‌ها در لایه‌ها:</span> <span class="font-english text-cyan-300" dir="ltr">[${eShells.join(', ')}]</span>
+        </div>
+        <!-- Properties grid -->
+        <div class="props-grid">
+            <div class="prop-box">
+                <p class="prop-label">جرم اتمی</p>
+                <p class="prop-value">${mass}</p>
+            </div>
+            <div class="prop-box">
+                <p class="prop-label">نقطه ذوب</p>
+                <p class="prop-value">${meltTxt}</p>
+            </div>
+            <div class="prop-box">
+                <p class="prop-label">دسته</p>
+                <p class="prop-value" style="font-family:'Vazirmatn',sans-serif;direction:rtl;font-size:0.8rem">${groupFaName}</p>
+            </div>
         </div>
         <div class="text-slate-300 mb-4 border-b border-slate-600/50 pb-4">
             ${info.desc}
@@ -1015,6 +1320,7 @@ function createGrid(activeGame = false) {
         
         // Base classes
         cell.className = `element font-english`;
+        cell.dataset.atomicNum = el.num; // used by the progress heatmap
         cell.style.gridRow = `${targetRow}`;
         cell.style.gridColumn = `${targetCol}`;
         
@@ -1050,8 +1356,9 @@ function createGrid(activeGame = false) {
         }
         else {
             // Check if this element fits current quiz range constraints
+            // (story mode forces its own subset regardless of the radio buttons)
             const rangeMode = document.querySelector('input[name="range-select-mode"]:checked').value;
-            const matchesFilters = rangeMode === 'all' ? el.isMainBlock : customSelectedElements.has(el.num);
+            const matchesFilters = (rangeMode === 'all' && !storySession) ? el.isMainBlock : customSelectedElements.has(el.num);
 
             if (matchesFilters) {
                 // These are the puzzle targets
@@ -1082,6 +1389,9 @@ function createGrid(activeGame = false) {
         
         tableEl.appendChild(cell);
     });
+
+    // Re-apply heatmap outlines after any grid rebuild
+    if (heatmapActive) applyHeatmap();
 }
 
 function initGame() {
@@ -1101,7 +1411,11 @@ function initGame() {
     lives = 3;
     timeElapsed = 0;
     isGameActive = true;
-    
+    comboCount = 0;
+    stats = { correct: 0, wrong: 0, bestCombo: 0, hintsUsed: 0 };
+    storySession = null; // classic mode
+    challengeMode = document.getElementById('challenge-mode-check').checked;
+
     // Filter element pool matching selected range
     if (rangeMode === 'all') {
         currentPool = elementData.filter(e => e.isMainBlock).sort(() => Math.random() - 0.5);
@@ -1117,12 +1431,14 @@ function initGame() {
 
     // Update UI
     updateStats();
+    updateComboDisplay(false);
     createGrid(true);
     
     startPanel.classList.add('hidden');
     document.getElementById('selection-instruction').classList.add('hidden');
     gameDashboard.classList.remove('hidden');
     gameDashboard.classList.add('flex');
+    gameDashboard.classList.remove('story-active');
     modal.classList.add('hidden');
     
     // Timer
@@ -1134,6 +1450,287 @@ function initGame() {
     
     nextElement();
 }
+
+/* ============================================================
+   STORY MAP MODE 🗺️
+   ============================================================ */
+function getStoryProgress() {
+    try {
+        return JSON.parse(localStorage.getItem('pp-story-progress') || '{}');
+    } catch (e) { return {}; }
+}
+
+function saveStoryProgress(progress) {
+    localStorage.setItem('pp-story-progress', JSON.stringify(progress));
+}
+
+function isRegionUnlocked(regionIdx) {
+    if (regionIdx === 0) return true;
+    const progress = getStoryProgress();
+    const prevRegion = storyRegions[regionIdx - 1];
+    return prevRegion.levels.every(l => progress[prevRegion.id + '/' + l.id]);
+}
+
+function isLevelUnlocked(region, levelIdx) {
+    if (levelIdx === 0) return isRegionUnlocked(storyRegions.indexOf(region));
+    const progress = getStoryProgress();
+    return progress[region.id + '/' + region.levels[levelIdx - 1].id];
+}
+
+function openStoryMap() {
+    SFX.click();
+    renderStoryMap();
+    document.getElementById('story-map-modal').classList.remove('hidden');
+}
+
+function renderStoryMap() {
+    const listEl = document.getElementById('story-map-list');
+    const progress = getStoryProgress();
+
+    let totalLevels = 0, doneLevels = 0;
+    storyRegions.forEach(r => r.levels.forEach(l => {
+        totalLevels++;
+        if (progress[r.id + '/' + l.id]) doneLevels++;
+    }));
+
+    document.getElementById('map-total-progress').innerHTML = `
+        <div class="flex justify-between text-xs text-slate-400 mb-1 font-bold">
+            <span>پیشرفت کل سفر</span><span class="font-english">${doneLevels}/${totalLevels}</span>
+        </div>
+        <div class="region-progress-track" style="margin-top:0"><div class="region-progress-fill" style="width:${(doneLevels/totalLevels)*100}%;background:linear-gradient(90deg,#a855f7,#ec4899)"></div></div>
+    `;
+
+    listEl.innerHTML = storyRegions.map((region, ri) => {
+        const unlocked = isRegionUnlocked(ri);
+        const doneCount = region.levels.filter(l => progress[region.id + '/' + l.id]).length;
+        const allDone = doneCount === region.levels.length;
+
+        const levelsHtml = region.levels.map((level, li) => {
+            const lvlUnlocked = isLevelUnlocked(region, li);
+            const lvlDone = !!progress[region.id + '/' + level.id];
+            return `
+                <button class="map-level-btn ${lvlDone ? 'done' : ''}" ${!unlocked || !lvlUnlocked ? 'disabled' : ''}
+                        style="${lvlUnlocked && !lvlDone ? `border-color:${region.color}66` : ''}"
+                        onclick="startStoryLevel('${region.id}','${level.id}')">
+                    <span class="map-level-badge">${lvlDone ? '✅' : (!lvlUnlocked ? '🔒' : region.emoji)}</span>
+                    <span class="flex-1">
+                        <span class="block font-bold text-sm">مرحله ${li+1}: ${level.name}</span>
+                        <span class="block text-xs text-slate-400 mt-0.5">
+                            ${teachNumsResolved(level.teachNums).length > 0 ? '🎓 آموزش دارد • ' : ''}${resolveQuizNums(level.quizNums).length} عنصر
+                        </span>
+                    </span>
+                </button>
+            `;
+        }).join('');
+
+        return `
+            ${ri > 0 ? '<div class="map-connector">•</div>' : ''}
+            <div class="map-region ${unlocked ? '' : 'locked'}" style="border-color:${region.color}${unlocked ? '88' : '33'};color:${region.color}">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-3xl">${unlocked ? region.emoji : '🔒'}</span>
+                    <div class="flex-1">
+                        <h3 class="font-extrabold text-base" style="color:${region.color}">${region.name}</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">${region.desc}</p>
+                    </div>
+                    <span class="text-xs font-bold font-english px-2 py-1 rounded-lg bg-black/30">${doneCount}/${region.levels.length}</span>
+                </div>
+                <div class="flex flex-col gap-2">${levelsHtml}</div>
+                <div class="region-progress-track"><div class="region-progress-fill" style="width:${(doneCount/region.levels.length)*100}%"></div></div>
+                ${allDone ? '<p class="text-center text-xs font-bold text-green-400 mt-2">🎉 این منطقه فتح شد!</p>' : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function teachNumsResolved(nums) { return nums || []; }
+
+function resolveQuizNums(qn) {
+    if (qn === '__ALL__') return elementData.filter(e => e.isMainBlock).map(e => e.num);
+    return qn || [];
+}
+
+window.startStoryLevel = function(regionId, levelId) {
+    const region = storyRegions.find(r => r.id === regionId);
+    const level = region.levels.find(l => l.id === levelId);
+    if (!region || !level) return;
+    if (!isRegionUnlocked(storyRegions.indexOf(region)) || !isLevelUnlocked(region, region.levels.indexOf(level))) return;
+
+    showLevelIntro(region, level);
+};
+
+function showLevelIntro(region, level) {
+    SFX.click();
+    const teachEls = (level.teachNums || []).map(n => elementData.find(e => e.num === n)).filter(Boolean);
+
+    const chips = teachEls.map(el => {
+        const info = categoryInfo[el.cat] || {};
+        return `
+            <span class="teach-element-chip cursor-pointer hover:border-cyan-400 transition-colors" onclick="openElementInfo(elementData.find(e=>e.num===${el.num}))">
+                <b class="font-english text-xl" style="color:${info.color}">${el.sym}</b>
+                <span class="text-sm">${el.name}</span>
+                <span class="text-xs text-slate-500 font-english">#${el.num}</span>
+            </span>
+        `;
+    }).join('');
+
+    const factsHtml = teachEls.map(el => {
+        const facts = elementFacts[el.num] || [];
+        const fact = facts.length ? facts[0] : '';
+        return fact ? `<p class="text-sm leading-relaxed"><span class="inline-block w-2 h-2 rounded-full mr-2" style="background:${(categoryInfo[el.cat]||{}).color}"></span>${fact}</p>` : '';
+    }).join('');
+
+    document.getElementById('level-teach-content').innerHTML = `
+        <div class="text-center mb-4">
+            <span class="text-5xl">${region.emoji}</span>
+            <h2 class="text-2xl font-extrabold text-white mt-2">${level.name}</h2>
+            <p class="text-sm text-purple-300 font-bold mt-1">${region.name}</p>
+        </div>
+
+        ${teachEls.length ? `
+        <div class="teach-card">
+            <p class="text-cyan-300 font-extrabold text-sm mb-2">🎓 اول یاد بگیر:</p>
+            <div class="mb-2">${chips}</div>
+            <div class="space-y-1.5 text-slate-300">${factsHtml}</div>
+            <p class="text-xs text-slate-500 mt-2">💡 روی هر عنصر کلیک کن تا کارت کاملش رو ببینی.</p>
+        </div>
+        <div class="bg-emerald-900/20 border border-emerald-600/40 rounded-xl p-3 mb-4 text-sm text-emerald-300">
+            ✍️ بعدش باید <b>${resolveQuizNums(level.quizNums).length} عنصر</b> رو در جای درستش بگذاری.
+        </div>` : `
+        <div class="bg-purple-900/20 border border-purple-500/40 rounded-xl p-3 mb-4 text-sm text-purple-200">
+            ⚔️ مرحله مبارزه! هیچ آموزشی نیست — فقط ${resolveQuizNums(level.quizNums).length} عنصر باید درست جا بگذاری!
+        </div>`}
+
+        <button id="begin-level-btn" class="w-full bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-500 hover:to-fuchsia-400 text-white font-bold py-3 rounded-xl transition-all transform hover:scale-[1.02] shadow-lg shadow-purple-500/30 mb-2">
+            🚀 شروع مرحله
+        </button>
+        <button id="cancel-level-btn" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl transition-all">
+            بازگشت به نقشه
+        </button>
+    `;
+
+    document.getElementById('level-intro-modal').classList.remove('hidden');
+    document.getElementById('story-map-modal').classList.add('hidden');
+
+    document.getElementById('begin-level-btn').onclick = () => beginStoryQuiz(region, level);
+    document.getElementById('cancel-level-btn').onclick = () => {
+        document.getElementById('level-intro-modal').classList.add('hidden');
+        openStoryMap();
+    };
+}
+
+function beginStoryQuiz(region, level) {
+    document.getElementById('level-intro-modal').classList.add('hidden');
+
+    const quizNums = resolveQuizNums(level.quizNums);
+    const pool = elementData.filter(e => quizNums.includes(e.num)).sort(() => Math.random() - 0.5);
+    if (pool.length === 0) { alert('خطا در بارگذاری مرحله.'); return; }
+
+    // Reset state for the story run
+    score = 0;
+    lives = 3;
+    timeElapsed = 0;
+    isGameActive = true;
+    comboCount = 0;
+    stats = { correct: 0, wrong: 0, bestCombo: 0, hintsUsed: 0 };
+    challengeMode = false;
+    storySession = { regionId: region.id, levelId: level.id };
+
+    currentPool = pool;
+
+    // Force custom-range rendering for this subset
+    customSelectedElements = new Set(pool.map(e => e.num));
+
+    updateStats();
+    updateComboDisplay(false);
+    createGrid(true);
+
+    startPanel.classList.add('hidden');
+    gameDashboard.classList.remove('hidden');
+    gameDashboard.classList.add('flex');
+    gameDashboard.classList.add('story-active');
+    modal.classList.add('hidden');
+
+    // Story banner inside dashboard area (recreate each run)
+    let banner = document.getElementById('story-banner-live');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'story-banner-live';
+        banner.className = 'story-banner';
+        gameDashboard.parentElement.insertBefore(banner, gameDashboard);
+    }
+    banner.style.display = 'flex';
+    banner.innerHTML = `<span>${region.emoji}</span> ماجراجویی: ${region.name} — ${level.name}`;
+
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timeElapsed++;
+        updateTimerDisplay();
+    }, 1000);
+
+    nextElement();
+}
+
+function completeStoryLevel(regionId, levelId, finalScore) {
+    const progress = getStoryProgress();
+    const key = regionId + '/' + levelId;
+    const prev = progress[key] || 0;
+    progress[key] = Math.max(prev, finalScore); // keep best score per level
+    saveStoryProgress(progress);
+    storySession = null;
+    SFX.levelUp();
+    setTimeout(() => launchConfetti(60), 700);
+}
+
+/* ============================================================
+   HEATMAP — per-element success tracking 🌡️
+   ============================================================ */
+function recordAnswerResult(num, correct) {
+    try {
+        const hm = JSON.parse(localStorage.getItem('pp-heatmap') || '{}');
+        if (!hm[num]) hm[num] = { c: 0, w: 0 };
+        if (correct) hm[num].c++; else hm[num].w++;
+        hm[num].last = Date.now();
+        localStorage.setItem('pp-heatmap', JSON.stringify(hm));
+    } catch (e) {}
+}
+
+function heatClass(num) {
+    try {
+        const hm = JSON.parse(localStorage.getItem('pp-heatmap') || '{}');
+        const rec = hm[num];
+        if (!rec || (rec.c + rec.w) === 0) return 'heat-none';
+        const rate = rec.c / (rec.c + rec.w);
+        const attempts = rec.c + rec.w;
+        if (attempts >= 3 && rate >= 0.85) return 'heat-master';
+        if (rate >= 0.7) return 'heat-good';
+        if (rate >= 0.45) return 'heat-mid';
+        return 'heat-weak';
+    } catch (e) { return 'heat-none'; }
+}
+
+let heatmapActive = false;
+function toggleHeatmap() {
+    heatmapActive = !heatmapActive;
+    SFX.click();
+    applyHeatmap();
+}
+
+function applyHeatmap() {
+    tableEl.querySelectorAll('.element[data-atomic-num]').forEach(c => {
+        c.classList.remove('heat-none', 'heat-weak', 'heat-mid', 'heat-good', 'heat-master');
+        if (heatmapActive) {
+            c.classList.add(heatClass(parseInt(c.dataset.atomicNum)));
+        }
+    });
+    const legend = document.getElementById('heatmap-legend');
+    if (legend) legend.classList.toggle('hidden', !heatmapActive);
+    const btn = document.getElementById('heatmap-btn');
+    if (btn) btn.innerHTML = heatmapActive ? '🌡️ خاموش کردن نقشه' : '🌡️ نقشه پیشرفت من';
+}
+
+/* ============================================================
+   ENHANCED ELEMENT INFO CARD 🔬
+   ============================================================ */
 
 function nextElement() {
     if (currentPool.length === 0) {
@@ -1162,6 +1759,9 @@ function nextElement() {
     setTimeout(() => {
         targetBox.style.transform = 'scale(1)';
     }, 150);
+
+    // Restart the per-question challenge countdown
+    startChallengeTimer();
 }
 
 function handleCellClick(cell, targetAtomic) {
@@ -1172,18 +1772,25 @@ function handleCellClick(cell, targetAtomic) {
         cell.classList.remove('puzzle-target');
         cell.classList.add('filled');
         cell.classList.add(cell.dataset.colorClass); // Apply original color
+
+        registerCorrectAnswer(cell);
         
-        score += 10;
+        // Record progress for the heatmap
+        recordAnswerResult(targetAtomic, true);
+
+        stopChallengeTimer();
         updateStats();
-        nextElement();
+        setTimeout(() => { nextElement(); }, 250);
     } else {
         // Wrong!
         cell.classList.add('wrong-guess');
         setTimeout(() => cell.classList.remove('wrong-guess'), 500);
+
+        recordAnswerResult(currentElement.num, false);
+        registerWrongAnswer(cell); // includes the -5 penalty & SFX
+        updateStats();
         
         lives--;
-        score = Math.max(0, score - 5);
-        updateStats();
         
         if (lives <= 0) {
             endGame(false);
@@ -1205,27 +1812,51 @@ function updateTimerDisplay() {
 function endGame(win) {
     isGameActive = false;
     clearInterval(timerInterval);
+    stopChallengeTimer();
     modal.classList.remove('hidden');
     
+    const accuracy = (stats.correct + stats.wrong) > 0
+        ? Math.round((stats.correct / (stats.correct + stats.wrong)) * 100)
+        : 0;
+
     if (win) {
-        modalTitle.textContent = 'تبریک! 🎉';
+        modalTitle.innerHTML = 'تبریک! 🎉 <span class="trophy-shake">🏆</span>';
         modalTitle.className = 'text-3xl font-extrabold text-green-400 mb-2';
-        modalMessage.textContent = 'شما تمام عناصر را با موفقیت در جایگاه صحیح خود قرار دادید!';
+        modalMessage.textContent = storySession ? 'مرحله ماجراجویی با موفقیت کامل شد!' : 'شما تمام عناصر را با موفقیت در جایگاه صحیح خود قرار دادید!';
+        launchConfetti();
+        SFX.victory();
     } else {
         modalTitle.textContent = 'بازی تمام شد! 💀';
         modalTitle.className = 'text-3xl font-extrabold text-rose-500 mb-2';
         modalMessage.innerHTML = `عنصری که نتوانستید پیدا کنید:<br><span class="font-bold text-white text-xl mt-2 inline-block font-english">${currentElement.sym} - ${currentElement.name}</span>`;
+        SFX.gameOver();
     }
+
+    // End-game statistics chips
+    document.getElementById('end-stats').innerHTML = `
+        <span class="stat-chip">🎯 دقت: <b>${accuracy}%</b></span>
+        <span class="stat-chip">🔥 بهترین زنجیره: <b>${stats.bestCombo}</b></span>
+        <span class="stat-chip">✅ درست: <b>${stats.correct}</b></span>
+        <span class="stat-chip">❌ اشتباه: <b>${stats.wrong}</b></span>
+        ${stats.hintsUsed ? `<span class="stat-chip">💡 راهنما: <b>${stats.hintsUsed}</b></span>` : ''}
+    `;
     
     finalScoreEl.textContent = score;
-    
-        // Save to Leaderboard logic
-    setTimeout(() => {
-        if (score > 0 && playerName) {
-            document.getElementById('leaderboard-modal').classList.remove('hidden');
-            saveScoreToDB(playerName, score);
-        }
-    }, 500); // slight delay so modal renders first
+
+    // Story mode: unlock next level instead of leaderboard spam
+    if (storySession && win) {
+        completeStoryLevel(storySession.regionId, storySession.levelId, score);
+    }
+	
+    // Save to Leaderboard logic (only for classic games)
+    if (!storySession) {
+        setTimeout(() => {
+            if (score > 0 && playerName) {
+                document.getElementById('leaderboard-modal').classList.remove('hidden');
+                saveScoreToDB(playerName, score);
+            }
+        }, 500); // slight delay so modal renders first
+    }
 }
 
 // Event Listeners
@@ -1233,8 +1864,11 @@ startBtn.addEventListener('click', initGame);
 restartBtn.addEventListener('click', () => {
     startPanel.classList.remove('hidden');
     gameDashboard.classList.add('hidden');
-    gameDashboard.classList.remove('flex');
+    gameDashboard.classList.remove('flex', 'story-active');
     modal.classList.add('hidden');
+    const banner = document.getElementById('story-banner-live');
+    if (banner) banner.style.display = 'none';
+    storySession = null;
     createGrid(false); // Reset to display mode
 });
 
