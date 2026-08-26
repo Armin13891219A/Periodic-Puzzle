@@ -1,8 +1,10 @@
 /* ============================================================
    Story Map Data — «ماجرای جدول تناوبی» 🗺️
-   10 منطقه، هر کدام چند مرحله دارد.
-   هر مرحله: آموزش تعاملی → آزمون → باز شدن مرحله بعد
-   quizNums: '__ALL__' یعنی همه عناصر اصلی (isMainBlock)
+   9 منطقه، هر کدام چند مرحله دارد.
+   قانون طلایی: quizNums هر مرحله فقط همان عناصری است که تا
+   آن مرحله درس داده شده (teachNums مرحله‌های قبلی + فعلی).
+   یعنی: مرحله ۱ فقط عنصر اول، مرحله ۲ هر دو عنصر، ...
+   quizNums: '__ALL__' یعنی همه عناصر اصلی (فقط مبارزه نهایی)
    ============================================================ */
 
 const storyRegions = [
@@ -17,13 +19,12 @@ const storyRegions = [
                 id: 'l1',
                 name: 'آشنایی با هیدروژن',
                 teachNums: [1],
-                quizNums: [1, 2],
-                fact: 'هیدروژن سوخت ستارگان است و هلیم بالن‌ها را باد می‌کند!'
+                quizNums: [1]
             },
             {
                 id: 'l2',
-                name: 'قهرمان ردیف اول',
-                teachNums: [1, 2],
+                name: 'هلیم به کمک می‌آید',
+                teachNums: [2],
                 quizNums: [1, 2]
             }
         ]
@@ -39,13 +40,25 @@ const storyRegions = [
                 id: 'l1',
                 name: 'خانواده لیتیم و سدیم',
                 teachNums: [3, 11],
-                quizNums: [3, 11, 19, 37]
+                quizNums: [3, 11]
             },
             {
                 id: 'l2',
+                name: 'پتاسیم و روبیدیم',
+                teachNums: [19, 37],
+                quizNums: [3, 11, 19, 37]
+            },
+            {
+                id: 'l3',
                 name: 'بریلیم و منیزیم',
                 teachNums: [4, 12],
-                quizNums: [4, 12, 20, 38]
+                quizNums: [4, 12, 3, 11, 19, 37]
+            },
+            {
+                id: 'l4',
+                name: 'کلسیم و استرانسیم',
+                teachNums: [20, 38],
+                quizNums: [4, 12, 20, 38, 3, 11, 19, 37]
             }
         ]
     },
@@ -60,13 +73,31 @@ const storyRegions = [
                 id: 'l1',
                 name: 'کربن؛ ستاره حیات',
                 teachNums: [6],
-                quizNums: [5, 6, 7, 8]
+                quizNums: [6]
             },
             {
                 id: 'l2',
-                name: 'سیلیسیم و تراشه‌ها',
-                teachNums: [14],
-                quizNums: [13, 14, 15, 16]
+                name: 'بور و نیتروژن',
+                teachNums: [5, 7],
+                quizNums: [5, 6, 7]
+            },
+            {
+                id: 'l3',
+                name: 'اکسیژن حیات‌بخش',
+                teachNums: [8],
+                quizNums: [5, 6, 7, 8]
+            },
+            {
+                id: 'l4',
+                name: 'خانواده سیلیسیم',
+                teachNums: [13, 14],
+                quizNums: [5, 6, 7, 8, 13, 14]
+            },
+            {
+                id: 'l5',
+                name: 'فسفر و گوگرد',
+                teachNums: [15, 16],
+                quizNums: [5, 6, 7, 8, 13, 14, 15, 16]
             }
         ]
     },
@@ -81,7 +112,19 @@ const storyRegions = [
                 id: 'l1',
                 name: 'فلوئور و کلر',
                 teachNums: [9, 17],
+                quizNums: [9, 17]
+            },
+            {
+                id: 'l2',
+                name: 'برم و ید',
+                teachNums: [35, 53],
                 quizNums: [9, 17, 35, 53]
+            },
+            {
+                id: 'l3',
+                name: 'نگهبانان گنجینه',
+                teachNums: [10, 18],
+                quizNums: [9, 17, 35, 53, 10, 18]
             }
         ]
     },
@@ -94,8 +137,20 @@ const storyRegions = [
         levels: [
             {
                 id: 'l1',
-                name: 'خانواده بی‌تفاوت‌ها',
-                teachNums: [2, 10, 18],
+                name: 'هلیم و نئون',
+                teachNums: [2, 10],
+                quizNums: [2, 10]
+            },
+            {
+                id: 'l2',
+                name: 'آرگون و کریپتون',
+                teachNums: [18, 36],
+                quizNums: [2, 10, 18, 36]
+            },
+            {
+                id: 'l3',
+                name: 'زنون درخشان',
+                teachNums: [54],
                 quizNums: [2, 10, 18, 36, 54]
             }
         ]
@@ -109,15 +164,45 @@ const storyRegions = [
         levels: [
             {
                 id: 'l1',
-                name: 'آهن؛ قهرمان فولاد',
-                teachNums: [26],
-                quizNums: [21, 22, 23, 24, 25, 26, 27, 28]
+                name: 'سه برادر اول',
+                teachNums: [21, 22, 23],
+                quizNums: [21, 22, 23]
             },
             {
                 id: 'l2',
-                name: 'مس، نقره، طلا',
-                teachNums: [29, 47, 79],
-                quizNums: [29, 30, 47, 48, 78, 79, 80]
+                name: 'کروم و منگنز',
+                teachNums: [24, 25],
+                quizNums: [21, 22, 23, 24, 25]
+            },
+            {
+                id: 'l3',
+                name: 'آهن؛ قهرمان فولاد',
+                teachNums: [26],
+                quizNums: [21, 22, 23, 24, 25, 26]
+            },
+            {
+                id: 'l4',
+                name: 'کبالت و نیکل',
+                teachNums: [27, 28],
+                quizNums: [21, 22, 23, 24, 25, 26, 27, 28]
+            },
+            {
+                id: 'l5',
+                name: 'مس و روی',
+                teachNums: [29, 30],
+                quizNums: [29, 30, 21, 22, 23, 24, 25, 26, 27, 28]
+            },
+            {
+                id: 'l6',
+                name: 'گنج‌های گران‌بها',
+                teachNums: [47, 79],
+                quizNums: [47, 79, 29, 30, 21, 26, 27, 28]
+            },
+            {
+                id: 'l7',
+                name: 'همسایه‌های مرموز کارخانه',
+                teachNums: [31, 32, 33, 34],
+                quizNums: [31, 32, 33, 34, 29, 30]
             }
         ]
     },
@@ -132,13 +217,25 @@ const storyRegions = [
                 id: 'l1',
                 name: 'لانتان و سریم',
                 teachNums: [57, 58],
-                quizNums: [57, 58, 59, 60, 61, 62]
+                quizNums: [57, 58]
             },
             {
                 id: 'l2',
+                name: 'پرازئودیمیم و نئودیمیم',
+                teachNums: [59, 60],
+                quizNums: [57, 58, 59, 60]
+            },
+            {
+                id: 'l3',
                 name: 'قلب لانتانیدها',
-                teachNums: [63, 64, 65],
-                quizNums: [63, 64, 65, 66, 67, 68, 69, 70, 71]
+                teachNums: [62, 63],
+                quizNums: [57, 58, 59, 60, 62, 63]
+            },
+            {
+                id: 'l4',
+                name: 'یوروپیوم درخشان',
+                teachNums: [63, 64],
+                quizNums: [57, 58, 59, 60, 63, 64]
             }
         ]
     },
@@ -153,7 +250,19 @@ const storyRegions = [
                 id: 'l1',
                 name: 'اکتینیم و توریم',
                 teachNums: [89, 90],
-                quizNums: [89, 90, 91, 92, 93, 94]
+                quizNums: [89, 90]
+            },
+            {
+                id: 'l2',
+                name: 'اورانیوم سنگین',
+                teachNums: [92],
+                quizNums: [89, 90, 92]
+            },
+            {
+                id: 'l3',
+                name: 'پلوتونیوم مرموز',
+                teachNums: [94],
+                quizNums: [89, 90, 92, 94]
             }
         ]
     },
@@ -168,13 +277,13 @@ const storyRegions = [
                 id: 'l1',
                 name: 'مبارزه نیمه اول',
                 teachNums: [],
-                quizNums: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36]
+                quizNums: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
             },
             {
                 id: 'l2',
                 name: 'مبارزه نیمه دوم',
                 teachNums: [],
-                quizNums: [37,38,55,56,74,76,78,79,80,82,83,84,86,87,88,89,90,92,94]
+                quizNums: [21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38]
             },
             {
                 id: 'l3',
@@ -185,7 +294,6 @@ const storyRegions = [
         ]
     }
 ];
-
 /* Element properties for the enhanced info card */
 const elementProperties = {
     mass: { // Atomic mass (rounded)

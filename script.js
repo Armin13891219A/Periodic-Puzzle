@@ -1676,7 +1676,6 @@ function completeStoryLevel(regionId, levelId, finalScore) {
     const prev = progress[key] || 0;
     progress[key] = Math.max(prev, finalScore); // keep best score per level
     saveStoryProgress(progress);
-    storySession = null;
     SFX.levelUp();
     setTimeout(() => launchConfetti(60), 700);
 }
@@ -1788,9 +1787,9 @@ function handleCellClick(cell, targetAtomic) {
 
         recordAnswerResult(currentElement.num, false);
         registerWrongAnswer(cell); // includes the -5 penalty & SFX
-        updateStats();
         
         lives--;
+        updateStats(); // render AFTER decrementing so hearts stay in sync
         
         if (lives <= 0) {
             endGame(false);
